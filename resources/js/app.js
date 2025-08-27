@@ -1,0 +1,46 @@
+// Punto de entrada que inicializa todos los módulos JS al cargar el DOM
+import './main';
+import './bootstrap';
+import '../css/style.css';
+import '../css/personalStyles.css';
+
+// Módulos compartidos
+import { initModals } from './modules/shared/modals';
+import { setupRowSelection } from './modules/shared/tableSelection';
+import setupTableToggle from './modules/shared/tableToggle';
+
+// Módulo actividades
+import { initPlannerActions } from './modules/planner/activityActions';
+
+// Módulo empleados
+import { setupEmployeeCreate, setupEmployeeEdit, setupEmployeeDelete } from './modules/employees/employeeActions';
+import { setupEmployeePrint } from './modules/employees/employeePrint';
+import { setupEmployeeExport } from './modules/employees/employeeExport';
+import './modules/employees/signature';
+
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Módulos generales ---
+    initModals();
+    initPlannerActions();
+
+    // --- Empleados (solo si la ruta contiene /employees) ---
+    if (window.location.pathname.includes('/employees')) {
+        setupEmployeeCreate();
+        setupEmployeeEdit();
+        setupEmployeeDelete();
+        setupEmployeePrint();
+        setupEmployeeExport();
+
+        // Selección de filas empleados
+        setupRowSelection('employeesTable');
+
+        // Botón ver más/ver menos empleados
+        setupTableToggle('btn-double-employees', 'card-body-table-employees');
+    }
+
+    // --- Planner (solo si la ruta contiene /planner) ---
+    if (window.location.pathname.includes('/planner')) {
+        setupRowSelection('activitiesTable');
+        setupTableToggle('btn-double', 'card-body-table');
+    }
+});

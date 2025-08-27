@@ -1,0 +1,469 @@
+/* fijar sidebar */
+
+#sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+}
+
+/* Imagen logo responsiva */
+
+.sidebar-img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
+
+/* Fijar NavBar */
+
+#main-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+/* evitar que el contenido se desborde */
+
+#content {
+    box-sizing: border-box;
+}
+
+/* Ancho estandar de botones */
+
+.btn-personal {
+    min-width: 140px;
+    max-width: 140px;
+}
+
+/* Estilo para que el cursor cambie a una mano (puntero) en filas de tablas con la clase .table-interactive */
+
+.table-interactive tbody tr {
+    cursor: pointer;
+}
+
+/* Formatear color de las tablas (body) */
+
+.table-responsive .table tbody td {
+    color: #6c757d;
+}
+
+/* Anchos personalizados para columnas de la tabla planner para mantener armonía en el contenido */
+
+.personal-container th:nth-child(1),
+.personal-container td:nth-child(1),
+.personal-container th:nth-child(2),
+.personal-container td:nth-child(2),
+.personal-container th:nth-child(14),
+.personal-container td:nth-child(14) {
+    width: 300px;
+    min-width: 300px;
+    max-width: 300px;
+    vertical-align: middle;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.personal-container th:nth-child(3),
+.personal-container td:nth-child(3),
+.personal-container th:nth-child(18),
+.personal-container td:nth-child(18) {
+    width: 400px;
+    min-width: 400px;
+    max-width: 400px;
+    vertical-align: middle;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.personal-container th:nth-child(5),
+.personal-container td:nth-child(5),
+.personal-container th:nth-child(6),
+.personal-container td:nth-child(6),
+.personal-container th:nth-child(7),
+.personal-container td:nth-child(7),
+.personal-container th:nth-child(13),
+.personal-container td:nth-child(13),
+.personal-container th:nth-child(17),
+.personal-container td:nth-child(17) {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+    vertical-align: middle;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.personal-container th:nth-child(8),
+.personal-container td:nth-child(8) {
+    vertical-align: middle;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.personal-container th:nth-child(4),
+.personal-container td:nth-child(4),
+.personal-container th:nth-child(9),
+.personal-container td:nth-child(9),
+.personal-container th:nth-child(10),
+.personal-container td:nth-child(10),
+.personal-container th:nth-child(11),
+.personal-container td:nth-child(11),
+.personal-container th:nth-child(12),
+.personal-container td:nth-child(12),
+.personal-container th:nth-child(15),
+.personal-container td:nth-child(15),
+.personal-container th:nth-child(16),
+.personal-container td:nth-child(16) {
+    width: 200px;
+    min-width: 200px;
+    max-width: 200px;
+    vertical-align: middle;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+/* Anchos personalizados para columnas de la tabla employees para mantener armonía en el contenido */
+
+.container-employees th:nth-child(1),
+.container-employees th:nth-child(1),
+.container-employees th:nth-child(2),
+.container-employees th:nth-child(2),
+.container-employees th:nth-child(3),
+.container-employees th:nth-child(3) {
+    width: 504px;
+    min-width: 504px;
+    max-width: 504px;
+    vertical-align: middle;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.container-employees th:nth-child(4),
+.container-employees th:nth-child(4) {
+    width: 168px;
+    min-width: 168px;
+    max-width: 168px;
+    vertical-align: middle;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+/* Anchos personalizados para columnas de la tabla control de asistencia (check) para mantener armonía en el contenido */
+
+.container-check th:nth-child(1),
+.container-check td:nth-child(1) {
+    width: 504px;
+    min-width: 504px;
+    max-width: 504px;
+    vertical-align: middle;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.container-check th:nth-child(2),
+.container-check td:nth-child(2),
+.container-check th:nth-child(3),
+.container-check td:nth-child(3) {
+    width: 252px;
+    min-width: 252px;
+    max-width: 252px;
+    vertical-align: middle;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.container-check th:nth-child(5),
+.container-check td:nth-child(5) {
+    width: 336px;
+    min-width: 336px;
+    max-width: 336px;
+    vertical-align: middle;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.container-check th:nth-child(4),
+.container-check td:nth-child(4),
+.container-check th:nth-child(6),
+.container-check td:nth-child(6) {
+    width: 168px;
+    min-width: 168px;
+    max-width: 168px;
+    vertical-align: middle;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+
+/* Anchos personalizados para columnas de la tabla consultar actividades (check) para mantener armonía en el contenido */
+
+.container-activities th:nth-child(1),
+.container-activities td:nth-child(1),
+.container-activities th:nth-child(2),
+.container-activities td:nth-child(2),
+.container-activities th:nth-child(3),
+.container-activities td:nth-child(3),
+.container-activities th:nth-child(4),
+.container-activities td:nth-child(4),
+.container-activities th:nth-child(5),
+.container-activities td:nth-child(5) {
+    width: 420px;
+    min-width: 420px;
+    max-width: 420px;
+    vertical-align: middle;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+/* Colores de la empresa */
+
+.Azlo-light {
+    color: white;
+    background-color: rgb(5, 190, 192, 0.800);
+}
+
+.Azlo-dark {
+    color: white;
+    background-color: rgb(3, 84, 114);
+}
+
+#sidebar.Azlo-light {
+    background-color: rgb(5, 190, 192, 0.800);
+}
+
+.text-dark {
+    color: rgb(3, 84, 114);
+}
+
+.text-white {
+    color: white;
+}
+
+.btnAzlo-outline {
+    color: rgb(5, 190, 192, 0.800);
+    background-color: transparent;
+    background-image: none;
+    border-color: rgb(5, 190, 192, 0.800);
+    border-width: 1px;
+    border-style: solid;
+}
+
+.btnAzlo-outline:hover {
+    color: white;
+    background-color: rgb(5, 190, 192);
+    border-color: rgb(5, 190, 192);
+}
+
+.btnAzlo-dark {
+    color: white;
+    background-color: rgb(3, 84, 114);
+    background-image: none;
+    border-color: rgba(3, 84, 114);
+    border-width: 1px;
+    border-style: solid;
+}
+
+.btnAzlo-dark:hover {
+    color: white;
+    background-color: rgb(5, 190, 192);
+    border-color: rgb(5, 190, 192);
+}
+
+/* Alto del cuerpo de la tabla normal/extendido y scrolls */
+
+.body-table {
+    max-height: 30vh;
+    min-height: 30vh;
+    overflow-y: auto;
+    width: 100%;
+    overflow-x: auto;
+    transition: max-height 0.5s ease-in-out;
+}
+
+.body-table-double {
+    max-height: 74vh;
+    min-height: 74vh;
+    overflow-y: auto;
+    width: 100%;
+    overflow-x: auto;
+    transition: max-height 0.5s ease-in-out;
+}
+
+/* Colores dinámicos para la columna states */
+
+table.table-interactive tbody td.status-e {
+    background-color: #d4edda;
+    color: #155724;
+    font-weight: bold;
+}
+
+table.table-interactive tbody td.status-a {
+    background-color: #fff3cd;
+    color: #721c24;
+    font-weight: bold;
+}
+
+table.table-interactive tbody td.status-r {
+    background-color: #f8d7da;
+    color: #856404;
+    font-weight: bold;
+}
+
+/* Evitar que los label en el form se rompan */
+
+label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+/* color muted para el cuerpo de la tabla */
+
+table.table-interactive tbody td {
+    color: rgb(108, 117, 125);
+}
+
+
+/* Cabecero de la tabla fijo para desplazamiento */
+.table-responsive-fixed-header {
+    position: relative;
+}
+
+.table-responsive-fixed-header thead {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa;
+    z-index: 10;
+}
+
+.table-responsive-fixed-header table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* Cambiar color de íconos y letra */
+.sidebar-links li a {
+    color: rgb(3, 84, 114) !important;
+}
+
+.sidebar-links li a span.fa {
+    color: rgb(3, 84, 114);
+}
+
+/* Alto y ancho imagen home */
+.imgHome {
+    width: 1110px;
+    height: 700px;
+}
+
+/* Estilos login page */
+body,
+html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar-custom {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+}
+
+.container-principal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+.bg-image {
+    width: 1000px;
+    /* alto y ancho de imagen de fondo */
+    height: 800px;
+    /* alto y ancho de imagen de fondo */
+    background-image: url('/images/LogoAzloPrin.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    position: relative;
+}
+
+.bg-filtro-azlo {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(5, 189, 192, 0.5);
+    /* Filtro transparente */
+    z-index: 1;
+}
+
+.container-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 600px;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    text-align: center;
+}
+
+.btn-big {
+    font-size: 1.5rem;
+    padding: 1rem 2rem;
+}
+
+/* Quitar margen izquierdo del componente al botón de inicio */
+.no-icon-margin i {
+    margin-right: 0 !important;
+}
+
+.container-center2 {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 200px;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    text-align: center;
+}
+
+/* Estilos para el canva de la firma  */
+.signature-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.signature-canvas-container {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    background: #ffffff;
+    width: 100%;
+}
+
+.signature-canvas-container canvas {
+    display: block;
+    width: 100%;
+    height: 70px;
+    /*cursor: crosshair;*/
+}
+
