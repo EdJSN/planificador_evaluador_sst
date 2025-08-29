@@ -202,24 +202,45 @@ class CheckController extends Controller
 
         // Verificar contraseña del usuario actual
         if (!Hash::check($request->password, Auth::user()->password)) {
-            return back()->withErrors(['password' => 'La contraseña es incorrecta.'])->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'La contraseña es incorrecta.',
+            ], 401);
+        }
+
+        // Buscar control activo
+        $control = Control::where('status', 'active')->first();
+
+        if (!$control) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay un control activo para finalizar.',
+            ], 400);
         }
 
         // Obtener actividades activas desde los attendances
-        $activeActivities = Attendance::with('activity')
-            ->whereNull('deleted_at')
-            ->get()
-            ->unique('activity_id')
-            ->pluck('activity_id');
+        $activeActivities = Attendance::with('activity')->pluck('activity_id')->unique();
 
         if ($activeActivities->isEmpty()) {
-            return back()->with('error', 'No hay actividades para finalizar.');
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay actividades para finalizar.',
+            ], 400);
         }
 
-        // Cambiar status a "E"
-        Activity::whereIn('id', $activeActivities)->update(['status' => 'E']);
-        
-        return redirect()->back()->with('success', 'El control de asistencia fue finalizado correctamente.');
+        // Cambiar estado a "E"
+        Activity::whereIn('id', $activeActivities)->update(['states' => 'E']);
+
+        // Cerrar control
+        $control->update([
+            'status'   => 'finished',
+            'ended_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'El control de asistencia fue finalizado correctamente.',
+        ]);
     }
 
     /**

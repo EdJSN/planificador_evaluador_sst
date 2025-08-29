@@ -10,7 +10,7 @@
                     return $attendance->activity->topic ?? '';
                 })->filter();
         @endphp
-        <h5 class="mb-0 text-white">
+        <h5 id="activeActivitiesTitle" class="mb-0 text-white">
             Control de asistencia activo
             @if ($activeActivities->count())
                 : {{ $activeActivities->join(' • ') }}
@@ -76,7 +76,7 @@
                 <x-buttons.button type="submit" id="finalizeControlBtn" icon="fa fa-list-alt" text="Finalizar" data-bs-toggle="modal" data-bs-target="#confirm-finalize-modal" />
             </div>
             <!-- Modal para finalizar -->
-            <x-modals.confirm-finalize-modal/>
+            <x-modals.confirm-finalize-modal :activeActivities="$activeActivities"/>
         </div>
     </div>
 </div>

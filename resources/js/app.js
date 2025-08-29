@@ -20,12 +20,19 @@ import './modules/employees/signature';
 
 // Módulo controles
 import { setupCheckAttendance } from "./modules/check/checkActions";
+import { setupFinalizeActions } from "./modules/check/finalizeActions";
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Módulos generales ---
     initModals();
     initPlannerActions();
-    setupCheckAttendance();
+
+
+    // --- Planner (solo si la ruta contiene /planner) ---
+    if (window.location.pathname.includes('/planner')) {
+        setupRowSelection('activitiesTable');
+        setupTableToggle('btn-double', 'card-body-table');
+    }
 
     // --- Empleados (solo si la ruta contiene /employees) ---
     if (window.location.pathname.includes('/employees')) {
@@ -37,15 +44,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Selección de filas empleados
         setupRowSelection('employeesTable');
-
         // Botón ver más/ver menos empleados
         setupTableToggle('btn-double-employees', 'card-body-table-employees');
     }
 
     // --- Planner (solo si la ruta contiene /planner) ---
-    if (window.location.pathname.includes('/planner')) {
-        setupRowSelection('activitiesTable');
-        setupTableToggle('btn-double', 'card-body-table');
+    if (window.location.pathname.includes('/check')) {
+        setupCheckAttendance();
+        setupFinalizeActions();
     }
 });
 
