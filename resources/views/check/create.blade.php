@@ -3,7 +3,19 @@
 
 <div class="card" id="activeControlCard">
     <div class="card-header text-center Azlo-light">
-        <h5 class="mb-0 text-white">Control de asistencia activo</h5>
+        @php
+            $activeActivities = $attendances
+                ->unique('activity_id')
+                ->map(function ($attendance) {
+                    return $attendance->activity->topic ?? '';
+                })->filter();
+        @endphp
+        <h5 class="mb-0 text-white">
+            Control de asistencia activo
+            @if ($activeActivities->count())
+                : {{ $activeActivities->join(' • ') }}
+            @endif
+        </h5>
     </div>
     <div class="card-body">
         <p class="mb-1"></p>
@@ -18,7 +30,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($attendances as $attendance)
+                    @forelse ($attendances->unique('employee_id') as $attendance)
                         <tr data-attendance-id="{{ $attendance->id }}">
                             <td>{{ $attendance->employee->full_name }}</td>
                             <td>{{ $attendance->employee->document }}</td>
@@ -28,20 +40,20 @@
                                     {{-- Opción SÍ --}}
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input attend-radio" type="radio"
-                                            name="attend[{{ $attendance->employee_id }}]"
-                                            id="attend_yes_{{ $attendance->employee_id }}" value="1"
+                                            name="attend[{{ $attendance->id }}]" id="attend_yes_{{ $attendance->id }}"
+                                            value="1" data-attendance-id="{{ $attendance->id }}"
                                             {{ $attendance->attend ? 'checked' : '' }}>
                                         <label class="form-check-label"
-                                            for="attend_yes_{{ $attendance->employee_id }}">SÍ</label>
+                                            for="attend_yes_{{ $attendance->id }}">SÍ</label>
                                     </div>
                                     {{-- Opción NO --}}
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input attend-radio" type="radio"
-                                            name="attend[{{ $attendance->employee_id }}]"
-                                            id="attend_no_{{ $attendance->employee_id }}" value="0"
+                                            name="attend[{{ $attendance->id }}]" id="attend_no_{{ $attendance->id }}"
+                                            value="0" data-attendance-id="{{ $attendance->id }}"
                                             {{ !$attendance->attend ? 'checked' : '' }}>
                                         <label class="form-check-label"
-                                            for="attend_no_{{ $attendance->employee_id }}">NO</label>
+                                            for="attend_no_{{ $attendance->id }}">NO</label>
                                     </div>
                                 </div>
                             </td>
@@ -61,8 +73,10 @@
                 <x-buttons.button id="saveSignatureBtn" icon="fa fa-floppy-o" text="Guardar" />
             </div>
             <div class="col-md-6">
-                <x-buttons.button type="submit" id="finalizeControlBtn" icon="fa fa-list-alt" text="Finalizar" />
+                <x-buttons.button type="submit" id="finalizeControlBtn" icon="fa fa-list-alt" text="Finalizar" data-bs-toggle="modal" data-bs-target="#confirm-finalize-modal" />
             </div>
+            <!-- Modal para finalizar -->
+            <x-modals.confirm-finalize-modal/>
         </div>
     </div>
 </div>

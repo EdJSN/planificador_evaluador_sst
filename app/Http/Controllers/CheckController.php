@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\{Activity, Attendance, Control, Employee};
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class CheckController extends Controller
 {
@@ -69,43 +71,155 @@ class CheckController extends Controller
             ->with('success', 'Se creó un nuevo control de asistencia.');
     }
 
-    public function export(Request $request)
+    public function prepare(Request $request)
     {
-        $request->validate([
-            'activity_id' => 'required|array|min:1',
+        $data = $request->validate([
+            'activity_id'   => 'required|array|min:1',
             'activity_id.*' => 'exists:activities,id',
         ]);
 
-        // Crear un nuevo control activo
-        $control = Control::create([
-            'status' => 'active',
-            'created_by' => auth()->id(),
-        ]);
+        $activityIds = $data['activity_id'];
 
-        // Obtener todos los empleados
-        $employees = Employee::all();
+        // Reusar control activo o crearlo
+        $control = Control::where('status', 'active')->first();
+        if (!$control) {
+            $control = Control::create([
+                'status'     => 'active',
+                'started_at' => now(),
+                'created_by' => Auth::id(),
+            ]);
+        }
 
-        // Crear attendances para cada actividad y empleado
-        foreach ($request->activity_id as $activityId) {
-            foreach ($employees as $employee) {
-                Attendance::create([
-                    'control_id' => $control->id,
+        // Preparamos filas a upsert
+        $employees = Employee::select('id')->get();
+        $rows = [];
+        $now = now();
+        foreach ($activityIds as $activityId) {
+            foreach ($employees as $emp) {
+                $rows[] = [
+                    'control_id'  => $control->id,
                     'activity_id' => $activityId,
-                    'employee_id' => $employee->id,
-                    'attend' => false, // inicia en "NO"
-                ]);
+                    'employee_id' => $emp->id,
+                    'attend'      => false,   // SIEMPRE “No” por defecto
+                    'created_at'  => $now,
+                    'updated_at'  => $now,
+                ];
             }
         }
 
-        return redirect()
-            ->route('check.create') // redirige a la vista del control activo
-            ->with('success', 'Lista exportada correctamente.');
-    }
+        // Evitar duplicados si exportas varias veces (requiere índice único, ver paso 6)
+        Attendance::upsert(
+            $rows,
+            ['control_id', 'activity_id', 'employee_id'],
+            ['attend', 'updated_at']
+        );
 
+        return response()->json([
+            'success'     => true,
+            'message'     => 'Control de asistencia digital exportado correctamente.',
+            'control_id'  => $control->id,
+        ]);
+    }
 
     public function create()
     {
-        //
+        // Carga el control ACTIVO y sus datos para la vista create
+        $control = Control::where('status', 'active')->first();
+
+        if (!$control) {
+            // Si no hay control activo, puedes redirigir a empleados o mostrar un aviso
+            return redirect()
+                ->route('employees.index')
+                ->with('info', 'No hay un control activo. Exporta desde Empleados para iniciar uno.');
+        }
+
+        $attendances = Attendance::with(['employee.position', 'activity'])
+            ->where('control_id', $control->id)
+            ->orderBy('employee_id')
+            ->get();
+
+        // Lista “bonita” de actividades activas en este control (para mostrar en la vista)
+        $activities = Attendance::where('control_id', $control->id)
+            ->with('activity:id,topic')
+            ->get()
+            ->pluck('activity')
+            ->unique('id')
+            ->values();
+
+        return view('check.create', compact('control', 'attendances', 'activities'));
+    }
+
+    public function updateAttendance(Request $request)
+    {
+        $data = $request->validate([
+            'attendance_id' => 'required|exists:attendances,id',
+            'attend'        => 'required|boolean',
+        ]);
+
+        $attendance = Attendance::findOrFail($data['attendance_id']);
+
+        // Actualiza todas las asistencias del mismo control y mismo empleado
+        Attendance::where('control_id', $attendance->control_id)
+            ->where('employee_id', $attendance->employee_id)
+            ->update(['attend' => $data['attend']]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Asistencia(s) actualizada(s) correctamente.',
+        ]);
+    }
+
+    public function bulkUpdateAttendance(Request $request)
+    {
+        $data = $request->validate([
+            'attendances'               => 'required|array|min:1',
+            'attendances.*.id'          => 'required|exists:attendances,id',
+            'attendances.*.attend'      => 'required|boolean',
+        ]);
+
+        DB::transaction(function () use ($data) {
+            foreach ($data['attendances'] as $item) {
+                $att = Attendance::find($item['id']);
+                if (!$att) continue;
+
+                Attendance::where('control_id', $att->control_id)
+                    ->where('employee_id', $att->employee_id)
+                    ->update(['attend' => $item['attend']]);
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Asistencias guardadas en lote correctamente.',
+        ]);
+    }
+
+    public function finalize(Request $request)
+    {
+        $request->validate([
+            'password' => ['required'],
+        ]);
+
+        // Verificar contraseña del usuario actual
+        if (!Hash::check($request->password, Auth::user()->password)) {
+            return back()->withErrors(['password' => 'La contraseña es incorrecta.'])->withInput();
+        }
+
+        // Obtener actividades activas desde los attendances
+        $activeActivities = Attendance::with('activity')
+            ->whereNull('deleted_at')
+            ->get()
+            ->unique('activity_id')
+            ->pluck('activity_id');
+
+        if ($activeActivities->isEmpty()) {
+            return back()->with('error', 'No hay actividades para finalizar.');
+        }
+
+        // Cambiar status a "E"
+        Activity::whereIn('id', $activeActivities)->update(['status' => 'E']);
+        
+        return redirect()->back()->with('success', 'El control de asistencia fue finalizado correctamente.');
     }
 
     /**

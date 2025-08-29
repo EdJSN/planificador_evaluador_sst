@@ -30,12 +30,14 @@ Route::middleware(['auth'])->group(function () {
 
     // Sección Empleados 
     Route::resource('employees', EmployeeController::class);
-    Route::post('/employees/export', [EmployeeController::class, 'export'])->name('employees.export');
     Route::post('/employees/signature/show', [EmployeeController::class, 'showSignature'])->name('employees.signature.show');
 
     // Sección Controles
     Route::resource('check', CheckController::class);
-    Route::post('/check/export', [CheckController::class, 'export'])->name('check.export');
+    Route::post('/check/prepare', [CheckController::class, 'prepare'])->name('check.prepare');
+    Route::post('/check/attendance/update', [CheckController::class, 'updateAttendance'])->name('check.attendance.update');
+    Route::post('/check/attendance/bulk-update', [CheckController::class, 'bulkUpdateAttendance'])->name('check.attendance.bulkUpdate');
+    Route::post('/check/attendance/finalize', [CheckController::class, 'finalize'])->name('attendance.finalize');
 
 
     // Ruta /home 

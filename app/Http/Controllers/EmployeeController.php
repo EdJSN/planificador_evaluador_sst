@@ -3,10 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Employee;
-use App\Models\Position;
-use App\Models\Activity;
-use App\Models\Attendance;
+use App\Models\{Activity, Attendance, Control, Employee, Position};
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -24,7 +21,20 @@ class EmployeeController extends Controller
     {
         $employees = Employee::with('position')->orderBy('names', 'asc')->get();
         $positions = Position::orderBy('position')->get();
-        $activities = Activity::whereIn('states', ['P', 'A', 'R'])->get();
+
+        // Buscar actividades ya usadas en el control activo
+        $activeControl = Control::where('status', 'active')->first();
+
+        $usedActivities = $activeControl
+            ? Attendance::where('control_id', $activeControl->id)
+            ->pluck('activity_id')
+            ->unique()
+            : collect();
+
+        // Mostrar solo actividades válidas y no usadas
+        $activities = Activity::whereIn('states', ['P', 'A', 'R'])
+            ->whereNotIn('id', $usedActivities)
+            ->get();
 
         return view('employees.dashboard', compact('employees', 'positions', 'activities'));
     }
@@ -162,27 +172,6 @@ class EmployeeController extends Controller
             Log::error('Error al eliminar empleado: ' . $e->getMessage());
             return response()->json(['message' => 'Error interno al eliminar empleado.'], 500);
         }
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Función para exportar lista de asistencia.
-    |--------------------------------------------------------------------------
-    */
-    public function export(Request $request)
-    {
-        $request->validate(['activity_id' => 'required|exists:activities,id']);
-        $employees = Employee::all();
-
-        foreach ($employees as $employee) {
-            Attendance::create([
-                'activity_id' => $request->activity_id,
-                'employee_id' => $employee->id,
-                'attend' => false,
-            ]);
-        }
-
-        return response()->json(['message' => 'Exportación realizada correctamente']);
     }
 
     /*

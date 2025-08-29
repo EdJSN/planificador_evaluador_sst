@@ -3,7 +3,7 @@
     data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form id="exportListForm" action="{{ route('check.export') }}" method="POST">
+            <form id="exportListForm" action="{{ route('check.prepare') }}" method="POST">
                 @csrf
                 <div class="modal-header Azlo-light">
                     <h5 class="modal-title text-white d-block mx-auto" id="exportListModalLabel">Exportar lista de empleados</h5>

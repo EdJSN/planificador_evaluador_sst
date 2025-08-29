@@ -17,7 +17,7 @@ export function setupEmployeeExport() {
 
     // Inicializar Tom Select la primera vez
     if (!isSelectInitialized) {
-      const selectElement = document.getElementById('activity_id', 'areaRol');
+      const selectElement = document.getElementById('activity_id');
       if (selectElement) {
         new TomSelect(selectElement, {
           plugins: ['remove_button'], 

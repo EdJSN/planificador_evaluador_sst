@@ -18,10 +18,14 @@ import { setupEmployeePrint } from './modules/employees/employeePrint';
 import { setupEmployeeExport } from './modules/employees/employeeExport';
 import './modules/employees/signature';
 
+// Módulo controles
+import { setupCheckAttendance } from "./modules/check/checkActions";
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- Módulos generales ---
     initModals();
     initPlannerActions();
+    setupCheckAttendance();
 
     // --- Empleados (solo si la ruta contiene /employees) ---
     if (window.location.pathname.includes('/employees')) {
@@ -44,3 +48,4 @@ document.addEventListener('DOMContentLoaded', () => {
         setupTableToggle('btn-double', 'card-body-table');
     }
 });
+
