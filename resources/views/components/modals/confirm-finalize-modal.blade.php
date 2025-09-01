@@ -1,14 +1,11 @@
 {{-- Modal para confirmar finalización --}}
-<div class="modal fade" id="confirm-finalize-modal" tabindex="-1" data-bs-backdrop="static"
-    aria-labelledby="confirmFinalizeModalLabel" aria-hidden="true">
+<div class="modal fade" id="confirm-finalize-modal" tabindex="-1" aria-labelledby="confirmFinalizeModalLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-warning">
-                <h5 class="modal-title text-white d-block mx-auto" id="confirmFinalizeModalLabel">
-                    Confirmar finalización
-                </h5>
+            <div class="modal-header Azlo-light">
+                <h5 class="modal-title text-white d-block mx-auto" id="confirmFinalizeModalLabel">Confirmar finalización</h5>
             </div>
-            <div class="modal-body">
+            <div class="modal-body text-start">
                 @php
                     $activityNames = $activeActivities->join(' • ');
                 @endphp

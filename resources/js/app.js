@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initPlannerActions();
 
 
-    // --- Planner (solo si la ruta contiene /planner) ---
+    // --- Actividades (solo si la ruta contiene /planner) ---
     if (window.location.pathname.includes('/planner')) {
         setupRowSelection('activitiesTable');
         setupTableToggle('btn-double', 'card-body-table');
@@ -41,14 +41,13 @@ document.addEventListener('DOMContentLoaded', () => {
         setupEmployeeDelete();
         setupEmployeePrint();
         setupEmployeeExport();
-
         // Selección de filas empleados
         setupRowSelection('employeesTable');
         // Botón ver más/ver menos empleados
         setupTableToggle('btn-double-employees', 'card-body-table-employees');
     }
 
-    // --- Planner (solo si la ruta contiene /planner) ---
+    // --- Controles (solo si la ruta contiene /check) ---
     if (window.location.pathname.includes('/check')) {
         setupCheckAttendance();
         setupFinalizeActions();

@@ -5,15 +5,15 @@
     'id' => null,
     'icon' => null,
     'text' => '',
-    'variant' => 'outline-azlo',
+    'variant' => 'smallPrimary',
     'class' => '',
 ])
 
 @php
     $classes = match ($variant) {
-        'outline-azlo' => 'btn btnAzlo-outline',
+        'smallPrimary' => 'btn btnAzlo-dark',
         'outline-danger' => 'btn btn-outline-danger',
-        'default' => 'btn btnAzlo-outline',
+        'default' => 'btn btnAzlo-dark',
     };
 @endphp
 

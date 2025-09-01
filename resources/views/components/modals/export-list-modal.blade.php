@@ -1,6 +1,5 @@
 <!-- Modal para exportar lista de empleados a controles de asistencia digital -->
-<div class="modal fade" id="exportListModal" tabindex="-1" aria-labelledby="exportListModalLabel" aria-hidden="true"
-    data-bs-backdrop="static">
+<div class="modal fade" id="exportListModal" tabindex="-1" aria-labelledby="exportListModalLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form id="exportListForm" action="{{ route('check.prepare') }}" method="POST">

@@ -38,8 +38,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/check/attendance/update', [CheckController::class, 'updateAttendance'])->name('check.attendance.update');
     Route::post('/check/attendance/bulk-update', [CheckController::class, 'bulkUpdateAttendance'])->name('check.attendance.bulkUpdate');
     Route::post('/check/attendance/finalize', [CheckController::class, 'finalize'])->name('attendance.finalize');
-
-
+    
     // Ruta /home 
     Route::get('/home', [HomeController::class, 'index'])->name('home');
 });
