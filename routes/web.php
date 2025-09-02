@@ -1,10 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PlannerController;
-use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\CheckController;
-use App\Http\Controllers\HomeController;
+use App\Http\Controllers\{CheckController, EmployeeController, HomeController, PlannerController};
 use Illuminate\Support\Facades\Auth;
 
 /*
@@ -39,6 +36,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/check/attendance/bulk-update', [CheckController::class, 'bulkUpdateAttendance'])->name('check.attendance.bulkUpdate');
     Route::post('/check/attendance/finalize', [CheckController::class, 'finalize'])->name('attendance.finalize');
     Route::post('/check/search', [CheckController::class, 'searchActivities'])->name('activities.search');
+    Route::post('/check/print-attendees', [CheckController::class, 'printAttendees'])->name('check.print.attendees');
+
 
     
     // Ruta /home 

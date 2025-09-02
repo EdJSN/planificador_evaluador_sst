@@ -60,7 +60,7 @@ if (form && tableBody) {
                         <td>${dateFormatted}</td>
                         <td>${stateLabel}</td>
                         <td class="text-center">
-                            <button class="btn btnAzlo-dark" data-activity-id="${act.id}">
+                            <button class="btn btnAzlo-dark printBtn" data-id="${act.id}">
                                 <i class="fa fa-print"></i>
                             </button>
                         </td>

@@ -22,6 +22,7 @@ import './modules/employees/signature';
 import { setupCheckAttendance } from "./modules/check/checkActions";
 import { setupFinalizeActions } from "./modules/check/finalizeActions";
 import "./modules/check/activitySearch";
+import { setupAttendancePrint } from './modules/check/attendancePrint';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Módulos generales ---
@@ -52,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.location.pathname.includes('/check')) {
         setupCheckAttendance();
         setupFinalizeActions();
+        setupAttendancePrint();
     }
 });
 

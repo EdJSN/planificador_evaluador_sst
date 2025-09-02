@@ -293,6 +293,40 @@ class CheckController extends Controller
         return response()->json($activities);
     }
 
+    public function printAttendees(Request $request)
+    {
+        $activityId = $request->input('activity_id');
+
+        $attendances = Attendance::with(['activity', 'employee.position'])
+            ->where('activity_id', $activityId)
+            ->where('attend', 1)
+            ->get();
+
+        $data = $attendances->map(function ($att) {
+            $signatureBase64 = null;
+
+            if ($att->employee->file_path && file_exists(storage_path('app/private/signatures/' . $att->employee->file_path))) {
+                $file = file_get_contents(storage_path('app/private/signatures/' . $att->employee->file_path));
+                $signatureBase64 = 'data:image/png;base64,' . base64_encode($file);
+            }
+            return [
+                'name'      => $att->employee->full_name ?? '',
+                'document'  => $att->employee->document ?? '',
+                'position'  => $att->employee->position->position ?? '',
+                'file_path' => $signatureBase64,
+            ];
+        });
+
+        // Obtener la fecha estimada
+        $estimatedDate = optional($attendances->first()->activity)->estimated_date;
+
+        return response()->json([
+            'attendees'      => $data,
+            'estimated_date' => $estimatedDate,
+            'topic'          => optional($attendances->first()->activity)->topic,
+        ]);
+    }
+
     /**
      * Display the specified resource.
      */
