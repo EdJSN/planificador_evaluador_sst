@@ -21,6 +21,7 @@ import './modules/employees/signature';
 // Módulo controles
 import { setupCheckAttendance } from "./modules/check/checkActions";
 import { setupFinalizeActions } from "./modules/check/finalizeActions";
+import "./modules/check/activitySearch";
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Módulos generales ---

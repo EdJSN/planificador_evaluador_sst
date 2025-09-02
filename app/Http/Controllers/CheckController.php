@@ -7,6 +7,7 @@ use App\Models\{Activity, Attendance, Control, Employee};
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class CheckController extends Controller
 {
@@ -241,6 +242,55 @@ class CheckController extends Controller
             'success' => true,
             'message' => 'El control de asistencia fue finalizado correctamente.',
         ]);
+    }
+
+    public function searchActivities(Request $request)
+    {
+        $searchRaw = trim((string) $request->input('searchInput', ''));
+
+        // --- Intentar detectar si el usuario ingresó una fecha (d/m/Y o Y-m-d)
+        $date = null;
+        if ($searchRaw !== '') {
+            // Primero intentamos d/m/Y
+            try {
+                $d = Carbon::createFromFormat('d/m/Y', $searchRaw);
+                $date = $d->toDateString(); // 'YYYY-MM-DD'
+            } catch (\Exception $e) {
+                // Si falla, intentamos Y-m-d
+                try {
+                    $d2 = Carbon::createFromFormat('Y-m-d', $searchRaw);
+                    $date = $d2->toDateString();
+                } catch (\Exception $e2) {
+                    // no es fecha reconocible -> $date queda null
+                }
+            }
+        }
+
+        // --- Construir consulta sobre attendances (buscamos por actividad relacionada)
+        $query = Attendance::with('activity');
+
+        if ($searchRaw !== '') {
+            $query->whereHas('activity', function ($q) use ($searchRaw, $date) {
+                // agrupamos condiciones para que sean OR entre topic y fecha
+                $q->where(function ($q2) use ($searchRaw, $date) {
+                    $q2->where('topic', 'like', "%{$searchRaw}%");
+                    if ($date) {
+                        $q2->orWhereDate('estimated_date', $date);
+                    }
+                });
+            });
+        }
+
+        $attendances = $query->get();
+
+        // --- Mapear a actividades únicas (una fila por actividad)
+        $activities = $attendances
+            ->pluck('activity')   // sacamos los modelos Activity relacionados
+            ->filter()            // quitamos posibles nulls si activity fue borrada
+            ->unique('id')        // una sola por activity.id
+            ->values();           // reindexar
+
+        return response()->json($activities);
     }
 
     /**

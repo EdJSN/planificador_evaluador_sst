@@ -36,8 +36,28 @@ class Activity extends Model
         'efficacy_evaluation_date' => 'date:Y-m-d', // Formato para JSON (solo fecha)
     ];
 
+    protected $appends = ['estimated_date_formatted', 'states_label'];
+
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    public function getEstimatedDateFormattedAttribute()
+    {
+        if (!$this->estimated_date) return null;
+        return $this->estimated_date->format('d/m/Y');
+    }
+
+    public function getStatesLabelAttribute()
+    {
+        $map = [
+            'P' => 'Planificado',
+            'A' => 'Aplazado',
+            'R' => 'Reprogramado',
+            'E' => 'Ejecutado',
+        ];
+
+        return $map[$this->states] ?? $this->states ?? '';
     }
 }
