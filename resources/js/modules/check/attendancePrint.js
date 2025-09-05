@@ -29,8 +29,28 @@ export function setupAttendancePrint() {
                     formattedDate = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
                 }
 
+                function formatTimeTo12h(timeStr) {
+                    if (!timeStr) return '';
+                    // Admite "HH:mm:ss" o "HH:mm"
+                    const parts = timeStr.split(':');
+                    let hour = parseInt(parts[0], 10);
+                    const minutes = parts[1].padStart(2, '0');
+                    const ampm = hour >= 12 ? 'PM' : 'AM';
+                    hour = hour % 12 || 12; // convierte 0 → 12
+                    return `${hour}:${minutes} ${ampm}`;
+                }
+
                 //Tema de la actividad
                 const topic = result.topic;
+
+                // Closure (puede ser null si no existe)
+                const closure = result.closure || {};
+                const startTime = formatTimeTo12h(closure.start_time) || '';
+                const endTime = formatTimeTo12h(closure.end_time) || '';
+                const place = closure.place || '';
+                const facilitatorName = closure.facilitator_name || '';
+                const facilitatorDoc = closure.facilitator_document || '';
+                const facilitatorSig = closure.facilitator_signature || null; // base64 data:image/png...
 
                 const doc = new jsPDF();
                 const logo = new Image();
@@ -63,17 +83,17 @@ export function setupAttendancePrint() {
                         { content: 'Fecha', colSpan: 1, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
                         { content: formattedDate, colSpan: 2, styles: { halign: 'center', fontSize: 10 } },
                         { content: 'Hora inicio', colSpan: 1, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 8 } },
-                        { content: '', colSpan: 1 },
+                        { content: startTime, colSpan: 1 },
                         { content: 'Hora fin', colSpan: 1, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
-                        { content: '', colSpan: 1 },
+                        { content: endTime, colSpan: 1 },
                         { content: 'Lugar', colSpan: 1, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
-                        { content: '', colSpan: 4 }
+                        { content: place, colSpan: 4 }
                     ]);
                     body.push([
                         { content: 'Facilitador', colSpan: 2, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
-                        { content: '', colSpan: 2 },
+                        { content: facilitatorName, colSpan: 2 },
                         { content: 'Documento', colSpan: 2, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
-                        { content: '', colSpan: 2 },
+                        { content: facilitatorDoc, colSpan: 2 },
                         { content: 'Firma', colSpan: 2, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
                         { content: '', colSpan: 2 }
                     ]);
@@ -111,30 +131,6 @@ export function setupAttendancePrint() {
                         ]);
                     });
 
-                    autoTable(doc, {
-                        startY: 20,
-                        body: body,
-                        theme: 'grid',
-                        margin: { left: 10, right: 10 },
-                        didDrawCell: (data) => {
-                            // Dibujar firma en columna "Firma"
-                            if (data.section === 'body' && data.column.index === 3) {
-                                const rowIndex = data.row.index - 2; // ajusta por encabezados
-                                const attendee = attendees[rowIndex];
-                                if (attendee?.file_path) {
-                                    doc.addImage(
-                                        attendee.file_path,
-                                        'PNG',
-                                        data.cell.x + 2,
-                                        data.cell.y + 2,
-                                        40,
-                                        12
-                                    );
-                                }
-                            }
-                        }
-                    });
-
                     // Sección observaciones
                     body.push([{ content: 'III. Observaciones', colSpan: 12, styles: { fillColor: [5, 190, 192], fontStyle: 'bold', halign: 'center', textColor: [255, 255, 255] } }]);
                     for (let i = 0; i < 3; i++) {
@@ -153,6 +149,8 @@ export function setupAttendancePrint() {
                         columnStyles[i] = { cellWidth: colWidth };
                     }
 
+                    const facilitatorRowIndex = body.findIndex(r => r[0] && r[0].content === 'Facilitador');
+
                     autoTable(doc, {
                         startY: 10,
                         body: body,
@@ -169,6 +167,25 @@ export function setupAttendancePrint() {
                                 const x = data.cell.x + (data.cell.width - imgWidth) / 2;
                                 const y = data.cell.y + (data.cell.height - imgHeight) / 2;
                                 doc.addImage(logo, 'PNG', x, y, imgWidth, imgHeight);
+                            }
+
+                            // dibujar firma del facilitador si existe y estamos en la fila correcta
+                            if (typeof facilitatorRowIndex !== 'undefined' && facilitatorRowIndex !== -1) {
+                                if (data.row.index === facilitatorRowIndex) {
+                                    // la celda de firma queda al final (colSpan 2) - ajustamos para dibujar en las columnas finales
+                                    if (facilitatorSig && data.column.index >= 10) {
+                                        const margin = 2;
+                                        const sigWidth = data.cell.width - margin * 2;
+                                        const sigHeight = data.cell.height - margin * 2;
+                                        const x = data.cell.x + (data.cell.width - sigWidth) / 2;
+                                        const y = data.cell.y + (data.cell.height - sigHeight) / 2;
+                                        try {
+                                            doc.addImage(facilitatorSig, 'PNG', x, y, sigWidth, sigHeight);
+                                        } catch (err) {
+                                            console.warn('No se pudo dibujar la firma del facilitador:', err);
+                                        }
+                                    }
+                                }
                             }
 
                             // Firmas en sección asistentes
@@ -189,11 +206,13 @@ export function setupAttendancePrint() {
                                 }
                             }
                         },
+
                         didDrawPage: (data) => {
                             const text = 'Autorizo a GRUPO AZLO SAS BIC en el manejo y tratamiento de mis datos personales.';
+                            const pageHeight = doc.internal.pageSize.getHeight();
                             doc.setFontSize(8);
                             doc.setTextColor(50);
-                            doc.text(text, doc.internal.pageSize.getWidth() / 2, data.cursor.y + 10, { align: 'center' });
+                            doc.text(text, doc.internal.pageSize.getWidth() / 2, pageHeight - 20, { align: 'center' });
                         }
                     });
 

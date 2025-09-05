@@ -60,4 +60,9 @@ class Activity extends Model
 
         return $map[$this->states] ?? $this->states ?? '';
     }
+
+    public function closure()
+    {
+        return $this->hasOne(ActivityClosure::class);
+    }
 }

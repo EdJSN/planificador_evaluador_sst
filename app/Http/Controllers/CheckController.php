@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\{Activity, Attendance, Control, Employee};
+use App\Models\{Activity, ActivityClosure, Attendance, Control, Employee};
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class CheckController extends Controller
 {
@@ -199,6 +201,12 @@ class CheckController extends Controller
     {
         $request->validate([
             'password' => ['required'],
+            'start_time'           => ['required', 'date_format:H:i'],
+            'end_time'             => ['required', 'date_format:H:i', 'after:start_time'],
+            'place'                => ['required', 'string', 'max:190'],
+            'facilitator_name'     => ['required', 'string', 'max:190'],
+            'facilitator_document' => ['required', 'string', 'max:50'],
+            'facilitator_signature' => ['required', 'string', 'regex:/^data:image\/png;base64,/'],
         ]);
 
         // Verificar contraseña del usuario actual
@@ -220,23 +228,91 @@ class CheckController extends Controller
         }
 
         // Obtener actividades activas desde los attendances
-        $activeActivities = Attendance::with('activity')->pluck('activity_id')->unique();
+        $activeActivities = Attendance::where('control_id', $control->id)
+            ->whereHas('activity', function ($q) {
+                $q->where('states', 'E'); // solo exportadas
+            })
+            ->pluck('activity_id')
+            ->unique();
 
         if ($activeActivities->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No hay actividades para finalizar.',
+                'message' => 'No hay actividades exportadas para finalizar.',
             ], 400);
+        }
+
+        // Guardar firma si llegó base64
+        if ($request->filled('facilitator_signature')) {
+            try {
+                $signatureData = $request->input('facilitator_signature');
+
+                // Aseguramos que viene en formato base64
+                if (str_starts_with($signatureData, 'data:image')) {
+                    [$meta, $content] = explode(',', $signatureData, 2);
+                    $binary = base64_decode($content);
+
+                    // Generar nombre único
+                    $filename = 'facilitators/' . Str::uuid()->toString() . '.png';
+
+                    // Guardar en storage/app/private
+                    Storage::disk('signatures')->put($filename, $binary);
+
+                    $signaturePath = 'signatures/' . $filename;
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'El formato de la firma no es válido',
+                    ], 422);
+                }
+            } catch (\Throwable $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error procesando la firma: ' . $e->getMessage(),
+                ], 500);
+            }
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'La firma del facilitador es obligatoria',
+            ], 422);
+        }
+
+        // Crear un cierre por cada actividad (misma info para todas)
+        $today = now()->toDateString();
+        foreach ($activeActivities as $activityId) {
+            ActivityClosure::updateOrCreate(
+                [
+                    'activity_id' => $activityId,
+                    'control_id'   => $control->id,
+                ],
+                [
+                    'date'                   => $today,
+                    'start_time'             => $request->start_time,
+                    'end_time'               => $request->end_time,
+                    'place'                  => $request->place,
+                    'facilitator_name'       => $request->facilitator_name,
+                    'facilitator_document'   => $request->facilitator_document,
+                    'facilitator_signature_path' => $signaturePath,
+                    'created_by'             => Auth::id(),
+                ]
+            );
         }
 
         // Cambiar estado a "E"
         Activity::whereIn('id', $activeActivities)->update(['states' => 'E']);
 
         // Cerrar control
-        $control->update([
-            'status'   => 'finished',
-            'ended_at' => now(),
-        ]);
+        $pending = Attendance::where('control_id', $control->id)
+            ->whereHas('activity', fn($q) => $q->where('states', 'E'))
+            ->exists();
+
+        if (!$pending) {
+            $control->update([
+                'status'      => 'finished',
+                'finished_at' => now(),
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -271,7 +347,6 @@ class CheckController extends Controller
 
         if ($searchRaw !== '') {
             $query->whereHas('activity', function ($q) use ($searchRaw, $date) {
-                // agrupamos condiciones para que sean OR entre topic y fecha
                 $q->where(function ($q2) use ($searchRaw, $date) {
                     $q2->where('topic', 'like', "%{$searchRaw}%");
                     if ($date) {
@@ -285,10 +360,10 @@ class CheckController extends Controller
 
         // --- Mapear a actividades únicas (una fila por actividad)
         $activities = $attendances
-            ->pluck('activity')   // sacamos los modelos Activity relacionados
-            ->filter()            // quitamos posibles nulls si activity fue borrada
-            ->unique('id')        // una sola por activity.id
-            ->values();           // reindexar
+            ->pluck('activity')
+            ->filter()
+            ->unique('id')
+            ->values();
 
         return response()->json($activities);
     }
@@ -320,10 +395,35 @@ class CheckController extends Controller
         // Obtener la fecha estimada
         $estimatedDate = optional($attendances->first()->activity)->estimated_date;
 
+        // Datos de la actividad
+        $activity = optional($attendances->first())->activity;
+
+        // Traer el cierre más reciente de esta actividad (por si hay varios)
+        $closure = ActivityClosure::where('activity_id', $activityId)
+            ->latest('id')->first();
+
+        // Firma del facilitador en base64
+        $facilitatorSignature = null;
+        if ($closure && $closure->facilitator_signature_path) {
+            $full = storage_path('app/private/' . $closure->facilitator_signature_path);
+            if (file_exists($full)) {
+                $facilitatorSignature = 'data:image/png;base64,' . base64_encode(file_get_contents($full));
+            }
+        }
+
         return response()->json([
             'attendees'      => $data,
             'estimated_date' => $estimatedDate,
             'topic'          => optional($attendances->first()->activity)->topic,
+            'closure' => $closure ? [
+                'date'                  => $closure->date,
+                'start_time'            => $closure->start_time,
+                'end_time'              => $closure->end_time,
+                'place'                 => $closure->place,
+                'facilitator_name'      => $closure->facilitator_name,
+                'facilitator_document'  => $closure->facilitator_document,
+                'facilitator_signature' => $facilitatorSignature,
+            ] : null,
         ]);
     }
 

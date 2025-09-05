@@ -23,6 +23,7 @@ import { setupCheckAttendance } from "./modules/check/checkActions";
 import { setupFinalizeActions } from "./modules/check/finalizeActions";
 import "./modules/check/activitySearch";
 import { setupAttendancePrint } from './modules/check/attendancePrint';
+import { setupFacilitatorSignature } from './modules/check/facilitatorSignature';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Módulos generales ---
@@ -54,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setupCheckAttendance();
         setupFinalizeActions();
         setupAttendancePrint();
+        setupFacilitatorSignature();
     }
 });
 
