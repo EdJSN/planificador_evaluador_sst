@@ -33,10 +33,8 @@
                 </thead>
                 <tbody>
                     @forelse ($activities as $activity)
-                        <tr data-id="{{ $activity->id }}"
-                            data-thematic_axis="{{ $activity->thematic_axis ?? '' }}"
-                            data-topic="{{ $activity->topic ?? '' }}"
-                            data-objective="{{ $activity->objective ?? '' }}"
+                        <tr data-id="{{ $activity->id }}" data-thematic_axis="{{ $activity->thematic_axis ?? '' }}"
+                            data-topic="{{ $activity->topic ?? '' }}" data-objective="{{ $activity->objective ?? '' }}"
                             data-place_time="{{ $activity->place_time ?? '' }}"
                             data-group_types="{{ $activity->group_types ?? '' }}"
                             data-facilitators="{{ $activity->facilitators ?? '' }}"
@@ -45,38 +43,43 @@
                             data-estimated_date="{{ $activity->estimated_date ? \Carbon\Carbon::parse($activity->estimated_date)->format('Y-m-d') : '' }}"
                             data-evaluation_methods="{{ $activity->evaluation_methods ?? '' }}"
                             data-resources="{{ $activity->resources ?? '' }}"
-                            data-budget="{{ $activity->budget ?? '' }}"
-                            data-states="{{ $activity->states ?? '' }}"
+                            data-budget="{{ $activity->budget ?? '' }}" data-states="{{ $activity->states ?? '' }}"
                             data-efficacy_evaluation="{{ $activity->efficacy_evaluation ?? '' }}"
                             data-efficacy_evaluation_date="{{ $activity->efficacy_evaluation_date ? \Carbon\Carbon::parse($activity->efficacy_evaluation_date)->format('Y-m-d') : '' }}"
                             data-responsible="{{ $activity->responsible ?? '' }}"
                             data-coverage="{{ $activity->coverage ?? '' }}"
-                            data-observations="{{ $activity->observations ?? '' }}"
-                            >
-                            <td >{{ $activity->thematic_axis }}</td>
-                            <td >{{ $activity->topic }}</td>
-                            <td >{{ $activity->objective }}</td>
-                            <td >{{ $activity->place_time }}</td>
-                            <td >{{ $activity->group_types }}</td>
-                            <td >{{ $activity->facilitators }}</td>
+                            data-observations="{{ $activity->observations ?? '' }}">
+                            <td>{{ $activity->thematic_axis }}</td>
+                            <td>{{ $activity->topic }}</td>
+                            <td>{{ $activity->objective }}</td>
+                            <td>{{ $activity->place_time }}</td>
+                            <td>{{ $activity->group_types }}</td>
+                            <td>{{ $activity->facilitators }}</td>
                             <td class="text-center">{{ number_format($activity->duration, 1) }}</td>
                             <td class="text-center">{{ $activity->number_participants }}</td>
-                            <td class="text-center">{{ $activity->estimated_date ? \Carbon\Carbon::parse($activity->estimated_date)->format('d/m/Y') : '' }}</td>
-                            <td >{{ $activity->evaluation_methods }}</td>
-                            <td >{{ $activity->resources }}</td>
-                            <td >{{ $activity->budget }}</td>
-                            <td class="text-center {{
-                                $activity->states == 'E' ? 'status-e' :
-                                ($activity->states == 'A' ? 'status-a' :
-                                ($activity->states == 'R' ? 'status-r' : ''))
-                                }}">
+                            <td class="text-center">
+                                {{ $activity->estimated_date ? \Carbon\Carbon::parse($activity->estimated_date)->format('d/m/Y') : '' }}
+                            </td>
+                            <td>{{ $activity->evaluation_methods }}</td>
+                            <td>{{ $activity->resources }}</td>
+                            <td>{{ $activity->budget }}</td>
+                            <td
+                                class="text-center {{ $activity->states == 'E'
+                                    ? 'status-e'
+                                    : ($activity->states == 'A'
+                                        ? 'status-a'
+                                        : ($activity->states == 'R'
+                                            ? 'status-r'
+                                            : '')) }}">
                                 {{ $activity->states }}
                             </td>
-                            <td >{{ $activity->efficacy_evaluation }}</td>
-                            <td class="text-center">{{ $activity->efficacy_evaluation_date ? \Carbon\Carbon::parse($activity->efficacy_evaluation_date)->format('d/m/Y') : '' }}</td>
-                            <td >{{ $activity->responsible }}</td>
+                            <td>{{ $activity->efficacy_evaluation }}</td>
+                            <td class="text-center">
+                                {{ $activity->efficacy_evaluation_date ? \Carbon\Carbon::parse($activity->efficacy_evaluation_date)->format('d/m/Y') : '' }}
+                            </td>
+                            <td>{{ $activity->responsible }}</td>
                             <td class="text-center">{{ $activity->coverage }}</td>
-                            <td >{{ $activity->observations }}</td>
+                            <td>{{ $activity->observations }}</td>
                         </tr>
                     @empty
                         <tr>
@@ -88,14 +91,18 @@
         </div>
         <div class="card-footer text-center">
             <div class="row">
-                <div class="col-md-4">
-                    <x-buttons.button id="selectBtn" icon="fa fa-mouse-pointer" text="Editar"/>
+                <div class="col-md-3">
+                    <x-buttons.button id="selectBtn" icon="fa fa-mouse-pointer" text="Editar" />
                 </div>
-                <div class="col-md-4">
-                    <x-buttons.button id="btn-double" icon="fa fa-search" text="Ver mas"/>
+                <div class="col-md-3">
+                    <x-buttons.button id="openExportModalBtn" icon="fa fa-upload" text="Exportar" data-bs-toggle="modal"
+                        data-bs-target="#exportListModal" />
                 </div>
-                <div class="col-md-4">
-                    <x-buttons.button id="deleteActivityButton" variant="danger" icon="fa fa-trash" text="Eliminar"/>
+                <div class="col-md-3">
+                    <x-buttons.button id="btn-double" icon="fa fa-search" text="Ver mas" />
+                </div>
+                <div class="col-md-3">
+                    <x-buttons.button id="deleteActivityButton" variant="danger" icon="fa fa-trash" text="Eliminar" />
                 </div>
             </div>
         </div>

@@ -32,7 +32,7 @@
                     <a href="{{ route('check.index') }}"><span class="fa fa-list-ul"></span>Control</a>
                 </li>
                 <li>
-                    <a href="settings.html"><span class="fa fa-cogs"></span>Ajustes</a>
+                    {{--<a href="settings.html"><span class="fa fa-cogs"></span>Ajustes</a>--}}
                 </li>
             </ul>
         </nav>

@@ -17,14 +17,16 @@
     </div>
 
     {{-- Modal para confirmar eliminación --}}
-    <x-modals.confirm-delete
-    modalId="confirmDeleteActivityModal"
-    title="Eliminar actividad"
-    message="Estás a punto de eliminar la actividad seleccionada. Esta acción es irreversible."
-    formId="deleteActivityForm"
-    route=""
-    inputId="deleteActivityId"
+    <x-modals.confirm-delete 
+        modalId="confirmDeleteActivityModal" 
+        title="Eliminar actividad"
+        message="Estás a punto de eliminar la actividad seleccionada. Esta acción es irreversible."
+        formId="deleteActivityForm" 
+        route="" inputId="deleteActivityId" 
     />
+
+    {{-- Modal para exportar --}}
+    <x-modals.export-list-modal :activities="$activities" />
 
     {{-- Incluir el formulario de creación --}}
     @include('planner.create')

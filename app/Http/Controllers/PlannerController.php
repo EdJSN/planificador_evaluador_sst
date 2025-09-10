@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Activity;
-use Carbon\Carbon;
+use App\Models\{Activity, Control};
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
@@ -20,7 +19,7 @@ class PlannerController extends Controller
         $activities = Activity::orderBy('id', 'desc')->get();
         return view('planner.dashboard', compact('activities'));
     }
-    
+
     public function index()
     {
         $activities = Activity::all();
@@ -38,7 +37,7 @@ class PlannerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-     public function store(Request $request)
+    public function store(Request $request)
     {
         try {
             $validatedData = $request->validate([
@@ -67,36 +66,19 @@ class PlannerController extends Controller
             // En lugar de redirigir, devuelve una respuesta JSON de éxito
             return response()->json([
                 'message' => 'Actividad creada exitosamente.',
-                'activity' => $activity 
-            ], 201); 
-
+                'activity' => $activity
+            ], 201);
         } catch (ValidationException $e) {
             // Manejo de errores de validación, Laravel ya lo convierte a JSON 422 si es una solicitud AJAX
             return response()->json([
                 'message' => 'Error de validación',
                 'errors' => $e->errors()
-            ], 422); 
+            ], 422);
         } catch (\Exception $e) {
             // Captura cualquier otro error inesperado en el servidor
             \Log::error('Error al crear actividad: ' . $e->getMessage() . ' en ' . $e->getFile() . ':' . $e->getLine());
             return response()->json(['message' => 'Ocurrió un error interno del servidor al crear la actividad.'], 500);
         }
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
     }
 
     /**
@@ -127,13 +109,12 @@ class PlannerController extends Controller
             ]);
 
             // Usa $validatedData para la actualización para mayor seguridad
-            $activity->update($validatedData); 
+            $activity->update($validatedData);
 
             return response()->json([
                 'message' => 'Actividad actualizada exitosamente.',
-                'activity' => $activity 
-            ], 200); 
-
+                'activity' => $activity
+            ], 200);
         } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'Error de validación',
@@ -162,10 +143,57 @@ class PlannerController extends Controller
 
         // 2. Eliminar la actividad (soft delete)
         try {
-            $activity->delete(); 
+            $activity->delete();
             return response()->json(['message' => 'Actividad eliminada exitosamente.']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error al eliminar la actividad: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function export(Request $request)
+    {
+        $request->validate([
+            'tipo' => 'required|in:individual,grupo',
+            'activity_id' => 'required_if:tipo,individual|nullable|exists:activities,id',
+            'activity_ids' => 'required_if:tipo,grupo|array',
+            'activity_ids.*' => 'exists:activities,id',
+        ]);
+
+        if ($request->tipo === 'individual') {
+            // Exportación individual (sin control_id)
+            $activity = Activity::findOrFail($request->activity_id);
+            $activity->control_id = null;
+            $activity->save();
+
+            return back()->with('success', 'Actividad exportada individualmente.');
+        }
+
+        if ($request->tipo === 'grupo') {
+            // Crear control y asignar a varias actividades
+            $control = Control::create([
+                'status' => 'activo',
+                'created_by' => auth()->id(),
+            ]);
+
+            Activity::whereIn('id', $request->activity_ids)->update(['control_id' => $control->id]);
+
+            return back()->with('success', 'Actividades exportadas como grupo.');
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        //
     }
 }

@@ -1,6 +1,5 @@
 import { getCreateEmployeeModal } from '../shared/modals';
 import { assignFormListener } from '../shared/formHandlers';
-import SignaturePad from 'signature_pad';
 
 let signaturePad = null;
 

@@ -76,14 +76,7 @@ class CheckController extends Controller
 
     public function prepare(Request $request)
     {
-        $data = $request->validate([
-            'activity_id'   => 'required|array|min:1',
-            'activity_id.*' => 'exists:activities,id',
-        ]);
-
-        $activityIds = $data['activity_id'];
-
-        // Reusar control activo o crearlo
+        // Buscar el control activo o crearlo vacío
         $control = Control::where('status', 'active')->first();
         if (!$control) {
             $control = Control::create([
@@ -93,24 +86,36 @@ class CheckController extends Controller
             ]);
         }
 
-        // Preparamos filas a upsert
+        // Buscar actividades que estén en estados exportables (P, A, R)
+        $activityIds = Activity::whereIn('states', ['P', 'A', 'R'])
+            ->pluck('id');
+
+        if ($activityIds->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay actividades exportadas para preparar asistencia.',
+            ]);
+        }
+
+        // Generar las filas de attendances
         $employees = Employee::select('id')->get();
         $rows = [];
         $now = now();
+
         foreach ($activityIds as $activityId) {
             foreach ($employees as $emp) {
                 $rows[] = [
                     'control_id'  => $control->id,
                     'activity_id' => $activityId,
                     'employee_id' => $emp->id,
-                    'attend'      => false,   // SIEMPRE “No” por defecto
+                    'attend'      => false,
                     'created_at'  => $now,
                     'updated_at'  => $now,
                 ];
             }
         }
 
-        // Evitar duplicados si exportas varias veces (requiere índice único, ver paso 6)
+        // Insertar o actualizar (sin duplicados)
         Attendance::upsert(
             $rows,
             ['control_id', 'activity_id', 'employee_id'],
@@ -118,9 +123,9 @@ class CheckController extends Controller
         );
 
         return response()->json([
-            'success'     => true,
-            'message'     => 'Control de asistencia digital exportado correctamente.',
-            'control_id'  => $control->id,
+            'success'    => true,
+            'message'    => 'Asistencias preparadas correctamente.',
+            'control_id' => $control->id,
         ]);
     }
 
@@ -230,7 +235,7 @@ class CheckController extends Controller
         // Obtener actividades activas desde los attendances
         $activeActivities = Attendance::where('control_id', $control->id)
             ->whereHas('activity', function ($q) {
-                $q->where('states', 'E'); // solo exportadas
+                $q->whereIn('states', ['P', 'A', 'R']); // solo exportadas
             })
             ->pluck('activity_id')
             ->unique();
@@ -300,7 +305,9 @@ class CheckController extends Controller
         }
 
         // Cambiar estado a "E"
-        Activity::whereIn('id', $activeActivities)->update(['states' => 'E']);
+        Activity::whereIn('id', $activeActivities)
+            ->whereIn('states', ['P', 'A', 'R'])
+            ->update(['states' => 'E']);
 
         // Cerrar control
         $pending = Attendance::where('control_id', $control->id)
@@ -377,6 +384,16 @@ class CheckController extends Controller
             ->where('attend', 1)
             ->get();
 
+        if ($attendances->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay asistentes registrados para esta actividad.',
+                'attendees' => [],
+                'closure' => null,
+            ], 404);
+        }
+
+        // Mapear asistentes con firma en base64 si existe
         $data = $attendances->map(function ($att) {
             $signatureBase64 = null;
 

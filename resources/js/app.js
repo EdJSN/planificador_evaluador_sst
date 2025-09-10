@@ -11,11 +11,11 @@ import setupTableToggle from './modules/shared/tableToggle';
 
 // Módulo actividades
 import { initPlannerActions } from './modules/planner/activityActions';
+import { setupExportListToggle } from "./modules/planner/exportListToggle";
 
 // Módulo empleados
 import { setupEmployeeCreate, setupEmployeeEdit, setupEmployeeDelete } from './modules/employees/employeeActions';
 import { setupEmployeePrint } from './modules/employees/employeePrint';
-import { setupEmployeeExport } from './modules/employees/employeeExport';
 import './modules/employees/signature';
 
 // Módulo controles
@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.location.pathname.includes('/planner')) {
         setupRowSelection('activitiesTable');
         setupTableToggle('btn-double', 'card-body-table');
+        setupExportListToggle();
     }
 
     // --- Empleados (solo si la ruta contiene /employees) ---
@@ -43,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setupEmployeeEdit();
         setupEmployeeDelete();
         setupEmployeePrint();
-        setupEmployeeExport();
         // Selección de filas empleados
         setupRowSelection('employeesTable');
         // Botón ver más/ver menos empleados

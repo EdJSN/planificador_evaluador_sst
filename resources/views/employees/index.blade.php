@@ -45,14 +45,9 @@
     </div>
     <div class="card-footer text-center">
         <div class="row">
-            <div class="col-md-6">
-                <x-buttons.button id="openExportModalBtn" icon="fa fa-upload" text="Exportar" />
-            </div>
-            <div class="col-md-6">
+            <div>
                 <x-buttons.button id="printEmployeesBtn" icon="fa fa-print" text="Imprimir" />
             </div>
-            <!-- Modal para exportar -->
-            <x-modals.export-list-modal :activities="$activities" />
         </div>
     </div>
 </div>
