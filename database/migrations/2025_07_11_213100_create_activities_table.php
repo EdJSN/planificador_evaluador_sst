@@ -16,9 +16,11 @@ return new class extends Migration
             $table->string('thematic_axis', 500);
             $table->string('topic', 500);
             $table->string('objective', 500);
-            $table->string('place_time')->nullable();
-            $table->string('group_types')->nullable();
-            $table->string('facilitators')->nullable();
+            $table->string('place')->nullable();
+            $table->time('start_time')->nullable();
+            $table->time('end_time')->nullable();
+            $table->string('facilitator')->nullable();
+            $table->string('facilitator_document')->nullable();
             $table->float('duration')->nullable();
             $table->integer('number_participants')->nullable();
             $table->date('estimated_date');
@@ -29,8 +31,9 @@ return new class extends Migration
             $table->string('efficacy_evaluation')->nullable();
             $table->date('efficacy_evaluation_date')->nullable();
             $table->string('responsible')->nullable();
-            $table->integer('coverage')->nullable();
             $table->text('observations')->nullable();
+            $table->integer('coverage')->nullable();
+            $table->foreignId('control_id')->nullable()->constrained('controls')->nullOnDelete();
             $table->softDeletes();
             $table->timestamps();
         });

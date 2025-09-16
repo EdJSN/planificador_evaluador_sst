@@ -1,6 +1,7 @@
 import { assignFormListener } from '../shared/formHandlers';
 import { getSelectedRow } from '../shared/tableSelection';
 import { getEditModal, getDeleteModal } from '../shared/modals';
+import { setupAudienceCounter } from '../employees/audienceCounter';
 
 export function initPlannerActions() {
     const editButton = document.getElementById('selectBtn');
@@ -34,19 +35,44 @@ export function initPlannerActions() {
             form.reset();
             for (const key in data) {
                 const input = form.querySelector(`#${key}`);
+
                 if (key === 'id') {
                     const idInput = form.querySelector('#editActivityId');
                     if (idInput) idInput.value = data[key] ?? '';
-                } else if (input) {
-                    if (input.tagName === 'SELECT' || input.tagName === 'TEXTAREA') {
+                }
+                else if (input) {
+                    if (input.tagName === 'SELECT' && input.multiple) {
+                        const selectedValues = (data[key] || '').split(',').map(v => v.trim());
+
+                        // Si está inicializado con TomSelect
+                        if (input.tomselect) {
+                            input.tomselect.setValue(selectedValues, true); // true = silencioso, sin disparar eventos extra
+                        } else {
+                            // Fallback por si no tiene TomSelect
+                            [...input.options].forEach(opt => {
+                                opt.selected = selectedValues.includes(opt.value.toString());
+                            });
+                        }
+                    }
+                    else if (input.tagName === 'SELECT' || input.tagName === 'TEXTAREA') {
+                        // select simple o textarea
                         input.value = data[key] ?? '';
-                    } else if (input.type === 'date') {
-                        input.value = data[key] ? new Date(data[key]).toISOString().split('T')[0] : '';
-                    } else {
+                    }
+                    else if (input.type === 'date') {
+                        // Fechas (ya vienen en formato YYYY-MM-DD desde el Blade)
+                        input.value = data[key]
+                            ? new Date(data[key]).toISOString().split('T')[0]
+                            : '';
+                    }
+                    else if (input.type === 'time') {
+                        // Horas (ya vienen en formato HH:mm desde el Blade)
+                        input.value = data[key] || '';
+                    }
+                    else {
+                        // Campos de texto u otros
                         input.value = data[key] ?? '';
                     }
                 }
-
             }
 
             form.action = `/planner/${data.id}`;
@@ -68,6 +94,15 @@ export function initPlannerActions() {
             passwordInput.classList.remove('is-invalid');
             deleteActivityForm.action = `/planner/${row.dataset.id}`;
             getDeleteModal()?.show();
+        });
+    }
+
+    if (editModalElement) {
+        editModalElement.addEventListener('shown.bs.modal', () => {
+            const editForm = document.getElementById('editActivityForm');
+            if (editForm) {
+                setupAudienceCounter(editForm);
+            }
         });
     }
 }

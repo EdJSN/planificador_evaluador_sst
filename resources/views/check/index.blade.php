@@ -36,3 +36,7 @@
     <div class="card-footer">
     </div>
 </div>
+
+<script>
+    window.printAttendeesUrl = "{{ route('check.print.attendees') }}";
+</script>

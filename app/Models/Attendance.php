@@ -11,7 +11,6 @@ class Attendance extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'control_id',
         'activity_id',
         'employee_id',
         'attend',
@@ -20,11 +19,6 @@ class Attendance extends Model
     protected $casts = [
         'attend' => 'boolean',
     ];
-
-    public function control()
-    {
-        return $this->belongsTo(Control::class);
-    }
 
     public function activity()
     {

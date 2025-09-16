@@ -48,6 +48,16 @@ export function setupEmployeeEdit() {
                 if (input) input.value = data[key];
             }
 
+            const audienceSelectEl = form.querySelector("#audiences");
+            if (audienceSelectEl && audienceSelectEl.tomselect) {
+                try {
+                    const selectedAudiences = JSON.parse(data.audiences || "[]");
+                    audienceSelectEl.tomselect.setValue(selectedAudiences);
+                } catch (err) {
+                    console.error("Error parseando audiences:", err);
+                }
+            }
+
             form.action = `/employees/${data.id}`;
             if (methodInput) methodInput.value = 'PUT';
             if (idInput) idInput.value = data.id;

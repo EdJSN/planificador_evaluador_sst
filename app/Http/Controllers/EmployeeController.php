@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\{Activity, Attendance, Control, Employee, Position};
+use App\Models\{Activity, Audience, Attendance, Control, Employee, Position};
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -23,13 +23,7 @@ class EmployeeController extends Controller
         $positions = Position::orderBy('position')->get();
 
         // Buscar actividades ya usadas en el control activo
-        $activeControl = Control::where('status', 'active')->first();
-
-        $usedActivities = $activeControl
-            ? Attendance::where('control_id', $activeControl->id)
-            ->pluck('activity_id')
-            ->unique()
-            : collect();
+        $usedActivities = Attendance::pluck('activity_id')->unique();
 
         // Mostrar solo actividades válidas y no usadas
         $activities = Activity::whereIn('states', ['P', 'A', 'R'])
@@ -46,7 +40,10 @@ class EmployeeController extends Controller
     */
     public function create()
     {
-        return view('employees.create');
+        $positions = Position::pluck('position', 'id');
+        $audienceOptions = Audience::pluck('name', 'id'); // para el select multiple
+
+        return view('employees.create', compact('positions', 'audienceOptions'));
     }
 
     /*
@@ -64,6 +61,8 @@ class EmployeeController extends Controller
                 'document' => 'required|string|max:50|unique:employees,document',
                 'position_id' => 'required|exists:positions,id',
                 'signature'   => 'required|string',
+                'audiences'   => 'required|array|min:1',
+                'audiences.*' => 'exists:audiences,id',
             ]);
 
             $filePath = $this->storeSignatureBase64($validatedData['signature'], $validatedData['document']);
@@ -76,6 +75,8 @@ class EmployeeController extends Controller
                 'position_id' => $validatedData['position_id'],
                 'file_path'   => $filePath,
             ]);
+
+            $employee->audiences()->sync($validatedData['audiences']);
 
             return response()->json([
                 'message' => 'Empleado registrado exitosamente.',
@@ -106,6 +107,8 @@ class EmployeeController extends Controller
                 'document' => 'required|string|max:50|unique:employees,document,' . $employee->id,
                 'position_id' => 'required|exists:positions,id',
                 'signature'   => 'nullable|string',
+                'audiences'   => 'required|array|min:1',
+                'audiences.*' => 'exists:audiences,id',
             ]);
 
             $employee->fill([
@@ -115,6 +118,8 @@ class EmployeeController extends Controller
                 'document'    => $validatedData['document'],
                 'position_id' => $validatedData['position_id'],
             ]);
+
+            $employee->audiences()->sync($validatedData['audiences']);
 
             if ($request->filled('signature')) {
                 $oldPath  = $employee->file_path;
@@ -228,6 +233,46 @@ class EmployeeController extends Controller
 
         return $fileName; // relativo a storage/app/private/signatures
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | NUEVO: Contar empleados por audiencias seleccionadas
+    |--------------------------------------------------------------------------
+    */
+    public function countByAudiences(Request $request)
+    {
+        $data = $request->validate([
+            'audience_ids'   => 'required|array|min:1',
+            'audience_ids.*' => 'integer|exists:audiences,id',
+            'mode'           => 'nullable|in:any,all',
+        ]);
+
+        $ids  = $data['audience_ids'];
+        $mode = $data['mode'] ?? 'any';
+
+        if ($mode === 'all') {
+            // Debe tener TODAS las audiencias seleccionadas
+            $query = Employee::query();
+            foreach ($ids as $audId) {
+                $query->whereHas('audiences', function ($q) use ($audId) {
+                    $q->where('audiences.id', $audId);
+                });
+            }
+            $count = $query->distinct('employees.id')->count('employees.id');
+        } else {
+            // 'any' = al menos una
+            $count = Employee::whereHas('audiences', function ($q) use ($ids) {
+                $q->whereIn('audiences.id', $ids);
+            })->distinct('employees.id')->count('employees.id');
+        }
+
+        return response()->json([
+            'success' => true,
+            'count'   => $count,
+            'mode'    => $mode,
+        ]);
+    }
+
 
     /*
     |--------------------------------------------------------------------------

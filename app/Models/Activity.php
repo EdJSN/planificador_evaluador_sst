@@ -14,9 +14,11 @@ class Activity extends Model
         'thematic_axis',
         'topic',
         'objective',
-        'place_time',
-        'group_types',
-        'facilitators',
+        'place',
+        'start_time',
+        'end_time',
+        'facilitator',
+        'facilitator_document',
         'duration',
         'number_participants',
         'estimated_date',
@@ -27,8 +29,8 @@ class Activity extends Model
         'efficacy_evaluation',
         'efficacy_evaluation_date',
         'responsible',
-        'coverage',
         'observations',
+        'coverage',
     ];
 
     protected $casts = [
@@ -61,8 +63,24 @@ class Activity extends Model
         return $map[$this->states] ?? $this->states ?? '';
     }
 
-    public function closure()
+    public function control()
     {
-        return $this->hasOne(ActivityClosure::class);
+        // muchos-a-muchos a través de attendances
+        return $this->belongsTo(Control::class);
+    }
+
+    public function closures()
+    {
+        return $this->hasMany(ActivityClosure::class);
+    }
+
+    public function scopeExportables($q)
+    {
+        return $q->whereIn('states', ['P', 'A', 'R']);
+    }
+
+    public function audiences()
+    {
+        return $this->belongsToMany(Audience::class, 'activity_audience');
     }
 }

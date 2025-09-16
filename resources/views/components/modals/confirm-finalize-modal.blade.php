@@ -13,16 +13,6 @@
                     <p>Estás a punto de finalizar el control de asistencia para las siguientes actividades:</p>
                     <p class="fw-bold text-center">{{ $activityNames }}</p>
                     <p>Completa los datos del cierre y tu contraseña para confirmar:</p>
-                    <div class="row">
-                        <x-forms.input type="time" label="Hora inicio" id="start_time" name="start_time"
-                            col='col-md-6' required />
-                        <x-forms.input type="time" label="Hora fin" id="end_time" name="end_time" col='col-md-6'
-                            required />
-                    </div>
-                    <div class=" row">
-                        <x-forms.input label="Documento (Facilitador)" id="facilitator_document" name="facilitator_document"
-                            col='col-md-12' required />
-                    </div>
                     {{-- Canvas de firma --}}
                     <div class="mb-3">
                         <label for="facilitatorSignatureInput" class="form-label">Firma (Facilitador)</label>
@@ -30,6 +20,7 @@
                             <div class="signature-canvas-container">
                                 <canvas id="facilitatorSignatureCanvas"></canvas>
                             </div>
+                            <input type="hidden" id="finalizeActivityIds" name="activity_ids">
                             <input type="hidden" id="facilitatorSignatureInput" name="facilitator_signature">
                         </div>
                     </div>

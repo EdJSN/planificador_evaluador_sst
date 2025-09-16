@@ -15,7 +15,7 @@
                     <input type="hidden" id="editFormMethod" name="_method" value="POST">
 
                     <div class="mb-3">
-                        <x-forms.input label="Nombres" id="names" name="names" col='col-md-12' autofocus/>
+                        <x-forms.input label="Nombres" id="names" name="names" col='col-md-12' autofocus />
                     </div>
                     <div class="mb-3">
                         <x-forms.input label="Apellido" id="lastname1" name="lastname1" col='col-md-12' />
@@ -35,8 +35,13 @@
                         <x-forms.select label="Cargo" id="position_id" name="position_id" col="col-md-12"
                             :options="$positionOptions" />
                     </div>
+                    {{-- Traer array de audiencias al select --}}
+                    @php
+                        $audienceOptions = \App\Models\Audience::pluck('name', 'id')->toArray();
+                    @endphp
                     <div class="mb-3">
-                        <x-forms.select label="Área/Rol" id="areaRol" name="areaRol" col='col-md-12' multiple/>
+                        <x-forms.select label="Área/Rol" id="audiences" name="audiences[]" col='col-md-12'
+                            class="js-tomselect form-select" data-placeholder="Seleccione las áreas" :options="$audienceOptions" multiple />
                     </div>
                     {{-- Canva para firma digital --}}
                     <div class="mb-3 mx-3">
@@ -56,10 +61,12 @@
             <div class="modal-footer justify-content-center">
                 <div class="row">
                     <div class="col-md-6">
-                        <x-buttons.button type="submit" id="saveEmployeeBtn" icon="fa fa-floppy-o" text="Guardar" form="createEmployeeForm" />
+                        <x-buttons.button type="submit" id="saveEmployeeBtn" icon="fa fa-floppy-o" text="Guardar"
+                            form="createEmployeeForm" />
                     </div>
                     <div class="col-md-6">
-                        <x-buttons.button variant="secondary" icon="fa fa-times" text="Cancelar" data-bs-dismiss="modal" />
+                        <x-buttons.button variant="secondary" icon="fa fa-times" text="Cancelar"
+                            data-bs-dismiss="modal" />
                     </div>
                 </div>
             </div>

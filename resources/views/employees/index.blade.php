@@ -21,11 +21,13 @@
             </thead>
             <tbody>
                 @forelse ($employees as $employee)
-                    <tr data-id="{{ $employee->id }}" data-names="{{ $employee->names ?? '' }}"
+                    <tr data-id="{{ $employee->id }}" 
+                        data-names="{{ $employee->names ?? '' }}"
                         data-lastname1="{{ $employee->lastname1 ?? '' }}"
                         data-lastname2="{{ $employee->lastname2 ?? '' }}"
                         data-document="{{ $employee->document ?? '' }}"
-                        data-position_id="{{ $employee->position_id ?? '' }}">
+                        data-position_id="{{ $employee->position_id ?? '' }}"
+                        data-audiences='@json($employee->audiences->pluck("id"))'>
                         <td>{{ $employee->full_name }}</td>
                         <td>{{ $employee->document }}</td>
                         <td class="text-center">{{ $employee->position->position }}</td>

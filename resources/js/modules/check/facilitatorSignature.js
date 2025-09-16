@@ -73,4 +73,9 @@ export function setupFacilitatorSignature() {
     modalEl.addEventListener('shown.bs.modal', () => {
         resizeCanvas();
     });
+
+    // Forzar guardar firma justo antes de enviar
+    modalEl.querySelector('form')?.addEventListener('submit', () => {
+        input.value = canvas.toDataURL('image/png');
+    });
 }

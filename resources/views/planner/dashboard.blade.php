@@ -17,13 +17,9 @@
     </div>
 
     {{-- Modal para confirmar eliminación --}}
-    <x-modals.confirm-delete 
-        modalId="confirmDeleteActivityModal" 
-        title="Eliminar actividad"
+    <x-modals.confirm-delete modalId="confirmDeleteActivityModal" title="Eliminar actividad"
         message="Estás a punto de eliminar la actividad seleccionada. Esta acción es irreversible."
-        formId="deleteActivityForm" 
-        route="" inputId="deleteActivityId" 
-    />
+        formId="deleteActivityForm" route="" inputId="deleteActivityId" />
 
     {{-- Modal para exportar --}}
     <x-modals.export-list-modal :activities="$activities" />
@@ -33,5 +29,10 @@
 
     {{-- Incluir la tabla de actividades --}}
     @include('planner.index', ['activities' => $activities])
+
+    <script>
+        window.activeActivities = @json($selected ?? collect());
+        window.countByAudiencesUrl = "{{ route('employees.countByAudiences') }}";
+    </script>
 
 </x-app-layout>

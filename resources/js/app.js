@@ -4,14 +4,18 @@ import './bootstrap';
 import '../css/style.css';
 import '../css/personalStyles.css';
 
+// CSS de Tom Select cargado globalmente
+import "tom-select/dist/css/tom-select.css";
+
 // Módulos compartidos
 import { initModals } from './modules/shared/modals';
 import { setupRowSelection } from './modules/shared/tableSelection';
 import setupTableToggle from './modules/shared/tableToggle';
+import { initTomSelects } from './modules/shared/tomselect';
 
 // Módulo actividades
 import { initPlannerActions } from './modules/planner/activityActions';
-import { setupExportListToggle } from "./modules/planner/exportListToggle";
+import { setupExportListModal } from "./modules/planner/exportListModal";
 
 // Módulo empleados
 import { setupEmployeeCreate, setupEmployeeEdit, setupEmployeeDelete } from './modules/employees/employeeActions';
@@ -24,18 +28,28 @@ import { setupFinalizeActions } from "./modules/check/finalizeActions";
 import "./modules/check/activitySearch";
 import { setupAttendancePrint } from './modules/check/attendancePrint';
 import { setupFacilitatorSignature } from './modules/check/facilitatorSignature';
+import { setupAudienceCounter } from './modules/employees/audienceCounter';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Módulos generales ---
     initModals();
     initPlannerActions();
+    initTomSelects();
+
+    const createForm = document.getElementById('createActivityForm');
+    if (createForm) {
+        setupAudienceCounter(createForm);
+    }
+
+    // Enganchar global (cubre otros selects si aparecen después)
+    setupAudienceCounter(document);
 
 
     // --- Actividades (solo si la ruta contiene /planner) ---
     if (window.location.pathname.includes('/planner')) {
         setupRowSelection('activitiesTable');
         setupTableToggle('btn-double', 'card-body-table');
-        setupExportListToggle();
+        setupExportListModal();
     }
 
     // --- Empleados (solo si la ruta contiene /employees) ---

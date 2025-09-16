@@ -32,9 +32,14 @@ class Employee extends Model
     }
 
     // Un empleado puede estar en muchos checks (asistencia)
-    public function Attendance()
+    public function attendance()
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    public function audiences()
+    {
+        return $this->belongsToMany(Audience::class, 'audience_employee');
     }
 
     /*
@@ -43,7 +48,7 @@ class Employee extends Model
     |--------------------------------------------------------------------------
     */
 
-    // Nombre completo concatenado (muy usado en tablas)
+    // Nombre completo concatenado
     public function getFullNameAttribute()
     {
         return "{$this->names} {$this->lastname1} {$this->lastname2}";

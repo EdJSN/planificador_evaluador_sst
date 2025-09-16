@@ -4,8 +4,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header Azlo-light">
-                <h5 class="modal-title text-white d-block mx-auto" id="exportListModalLabel">Exportar lista de
-                    empleados</h5>
+                <h5 class="modal-title text-white d-block mx-auto" id="exportListModalLabel">Correlacionar actividades</h5>
             </div>
             <div class="modal-body text-start">
                 <form id="exportListForm" action="{{ route('planner.export') }}" method="POST">
@@ -26,12 +25,12 @@
                         <!-- Selección de actividades -->
                         @php
                             $activityOptions =
-                                ['' => 'Seleccione una actividad'] + $activities->pluck('topic', 'id')->toArray();
+                                $activities->whereIn('states', ['P','A','R'])->pluck('topic', 'id')->toArray();
                         @endphp
                         <div>
                             <div id="actividad_individual" class="mb-3">
                                 <x-forms.select label="Actividad" id="activity_id_individual" name="activity_id"
-                                    col="col-md-12" :options="$activityOptions" required />
+                                    col="col-md-12" class="js-tomselect form-select" :options="$activityOptions" required />
                             </div>
 
                             <div id="actividad_grupo" class="mb-3 d-none">

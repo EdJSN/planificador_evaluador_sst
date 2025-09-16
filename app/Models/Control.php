@@ -28,6 +28,11 @@ class Control extends Model
         return $this->hasMany(Attendance::class);
     }
 
+    public function activities()
+    {
+        return $this->belongsToMany(Activity::class, 'attendances')->withTimestamps();
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');

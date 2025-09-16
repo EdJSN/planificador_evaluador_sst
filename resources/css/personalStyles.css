@@ -467,3 +467,22 @@ html {
     /*cursor: crosshair;*/
 }
 
+/* Ajustar Tom Select para que se vea como un input Bootstrap */
+.ts-wrapper {
+  width: 100% !important;
+}
+
+.ts-wrapper .ts-control {
+  min-height: calc(1.5em + .75rem + 2px);
+  padding: .375rem .75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  border-radius: .375rem;
+  border: 1px solid #ced4da;
+}
+
+/* Espaciado de tags cuando es multiple */
+.ts-wrapper .ts-control .item {
+  margin-right: .25rem;
+  margin-bottom: .125rem;
+}

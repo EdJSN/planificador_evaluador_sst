@@ -14,9 +14,12 @@
                         <th scope="col">Eje Temático</th>
                         <th scope="col">Tema</th>
                         <th scope="col">Objetivo</th>
-                        <th scope="col">Lugar y Hora</th>
+                        <th scope="col">Lugar</th>
+                        <th scope="col">Hora inicio</th>
+                        <th scope="col">Hora fin</th>
                         <th scope="col">Dirigido a</th>
                         <th scope="col">Facilitador</th>
+                        <th scope="col">Documento (Facilitador)</th>
                         <th scope="col">Duración</th>
                         <th scope="col">N° de participantes</th>
                         <th scope="col">Fecha estimada de ejecución</th>
@@ -35,9 +38,12 @@
                     @forelse ($activities as $activity)
                         <tr data-id="{{ $activity->id }}" data-thematic_axis="{{ $activity->thematic_axis ?? '' }}"
                             data-topic="{{ $activity->topic ?? '' }}" data-objective="{{ $activity->objective ?? '' }}"
-                            data-place_time="{{ $activity->place_time ?? '' }}"
-                            data-group_types="{{ $activity->group_types ?? '' }}"
-                            data-facilitators="{{ $activity->facilitators ?? '' }}"
+                            data-place="{{ $activity->place ?? '' }}"
+                            data-start_time="{{ $activity->start_time ? \Carbon\Carbon::parse($activity->start_time)->format('H:i') : '' }}"
+                            data-end_time="{{ $activity->end_time ? \Carbon\Carbon::parse($activity->end_time)->format('H:i') : '' }}"
+                            data-audiences="{{ $activity->audiences->pluck('id')->implode(',') }}"
+                            data-facilitator="{{ $activity->facilitator ?? '' }}"
+                            data-facilitator_document="{{ $activity->facilitator_document ?? '' }}"
                             data-duration="{{ $activity->duration ?? '' }}"
                             data-number_participants="{{ $activity->number_participants ?? '' }}"
                             data-estimated_date="{{ $activity->estimated_date ? \Carbon\Carbon::parse($activity->estimated_date)->format('Y-m-d') : '' }}"
@@ -52,9 +58,12 @@
                             <td>{{ $activity->thematic_axis }}</td>
                             <td>{{ $activity->topic }}</td>
                             <td>{{ $activity->objective }}</td>
-                            <td>{{ $activity->place_time }}</td>
-                            <td>{{ $activity->group_types }}</td>
-                            <td>{{ $activity->facilitators }}</td>
+                            <td>{{ $activity->place }}</td>
+                            <td>{{ $activity->start_time }}</td>
+                            <td>{{ $activity->end_time }}</td>
+                            <td>{{ $activity->audiences->pluck('name')->join(', ') }}</td>
+                            <td>{{ $activity->facilitator }}</td>
+                            <td>{{ $activity->facilitator_document }}</td>
                             <td class="text-center">{{ number_format($activity->duration, 1) }}</td>
                             <td class="text-center">{{ $activity->number_participants }}</td>
                             <td class="text-center">

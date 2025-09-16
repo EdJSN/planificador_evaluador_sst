@@ -1,10 +1,16 @@
 export function setupFinalizeActions() {
     const finalizeForm = document.getElementById("finalizeForm");
+    const hiddenActivityIds = document.getElementById("finalizeActivityIds");
 
     if (!finalizeForm) return;
 
     finalizeForm.addEventListener("submit", async (e) => {
         e.preventDefault();
+
+        // === Rellenar hidden con los IDs de actividades activas ===
+        if (hiddenActivityIds) {
+            hiddenActivityIds.value = (window.activeActivities || []).join(",");
+        }
 
         const formData = new FormData(finalizeForm);
 
@@ -38,6 +44,14 @@ export function setupFinalizeActions() {
                 const activitiesTitle = document.getElementById("activeActivitiesTitle");
                 if (activitiesTitle) {
                     activitiesTitle.textContent = "Control de asistencia activo";
+                }
+
+                if (hiddenActivityIds) {
+                    if (Array.isArray(window.activeActivities) && window.activeActivities.length > 0) {
+                        hiddenActivityIds.value = window.activeActivities.join(",");
+                    } else {
+                        hiddenActivityIds.value = "";
+                    }
                 }
 
             } else {

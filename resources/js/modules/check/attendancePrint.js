@@ -9,7 +9,7 @@ export function setupAttendancePrint() {
             const token = document.querySelector('input[name="_token"]').value;
 
             try {
-                const response = await fetch("/check/print-attendees", {
+                const response = await fetch(window.printAttendeesUrl, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

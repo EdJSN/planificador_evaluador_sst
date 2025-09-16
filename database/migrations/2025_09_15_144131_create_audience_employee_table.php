@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('attendances', function (Blueprint $table) {
+        Schema::create('audience_employee', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('activity_id')->constrained('activities');
-            $table->foreignId('employee_id')->constrained('employees');
-            $table->boolean('attend')->default(false);
-            $table->softDeletes();
+            $table->foreignId('employee_id')->constrained('employees')->cascadeOnDelete();
+            $table->foreignId('audience_id')->constrained('audiences')->cascadeOnDelete();
+            $table->unique(['employee_id', 'audience_id']);
             $table->timestamps();
-            $table->unique(['activity_id', 'employee_id']);
         });
     }
 
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('attendances');
+        Schema::dropIfExists('audience_employee');
     }
 };
