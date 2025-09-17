@@ -65,6 +65,9 @@ class CheckController extends Controller
             'created_by' => Auth::id(),
         ]);
 
+        // Pegar las actividades al control recién creado
+        Activity::whereIn('id', $request->activities)->update(['control_id' => $control->id]);
+
         // Obtener todos los empleados
         $employees = Employee::all();
 
@@ -174,6 +177,12 @@ class CheckController extends Controller
             ->where('employee_id', $attendance->employee_id)
             ->update(['attend' => $data['attend']]);
 
+        // Recalcular coverage de esta actividad
+        $activity = Activity::find($attendance->activity_id);
+        if ($activity) {
+            $activity->recalcCoverage();
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Asistencia(s) actualizada(s) correctamente.',
@@ -182,10 +191,13 @@ class CheckController extends Controller
 
     public function bulkUpdateAttendance(Request $request)
     {
+        // Validamos lo que llega del front
         $data = $request->validate([
-            'attendances'               => 'required|array|min:1',
-            'attendances.*.id'          => 'required|exists:attendances,id',
-            'attendances.*.attend'      => 'required|boolean',
+            'attendances'          => 'required|array|min:1',
+            'attendances.*.id'     => 'required|exists:attendances,id',
+            'attendances.*.attend' => 'required|boolean',
+            'activity_ids'         => 'required|array|min:1',
+            'activity_ids.*'       => 'integer|exists:activities,id',
         ]);
 
         DB::transaction(function () use ($data) {
@@ -193,27 +205,35 @@ class CheckController extends Controller
                 $att = Attendance::find($item['id']);
                 if (!$att) continue;
 
-                Attendance::where('activity_id', $att->activity_id)
+                // Aplicar el mismo attend para este empleado en TODAS las actividades del grupo
+                Attendance::whereIn('activity_id', $data['activity_ids'])
                     ->where('employee_id', $att->employee_id)
-                    ->update(['attend' => $item['attend']]);
+                    ->update(['attend' => (bool) $item['attend']]);
+            }
+
+            // Recalcular coverage para cada actividad del grupo 
+            $activities = Activity::whereIn('id', $data['activity_ids'])->get();
+            foreach ($activities as $activity) {
+                $activity->recalcCoverage();
             }
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'Asistencias guardadas en lote correctamente.',
+            'message' => 'Asistencias guardadas para todas las actividades.',
         ]);
     }
 
     public function finalize(Request $request)
     {
+        // (1) Validaciones de entrada (igual que ya tenías)
         $data = $request->validate([
             'password'              => ['required'],
-            'activity_ids'          => 'required|string',
+            'activity_ids'          => 'required|string', // CSV
             'facilitator_signature' => ['required', 'string', 'regex:/^data:image\/png;base64,/'],
         ]);
 
-        // Validar contraseña
+        // (2) Validar contraseña del usuario autenticado
         if (!Hash::check($request->password, Auth::user()->password)) {
             return response()->json([
                 'success' => false,
@@ -221,26 +241,50 @@ class CheckController extends Controller
             ], 401);
         }
 
-        // Convertir CSV a array
+        // (3) Parsear CSV de actividades → colección de enteros únicos
         $activityIds = collect(explode(',', $data['activity_ids']))
             ->map(fn($id) => (int) trim($id))
             ->filter()
             ->unique()
-            ->toArray();
+            ->values();
 
-        if (empty($activityIds)) {
+        if ($activityIds->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'message' => 'No se recibieron actividades para finalizar.',
             ], 400);
         }
 
-        // Guardar firma
+        // === NUEVO: forzamos array plano para whereIn/foreach
+        $ids = $activityIds->all(); // <-- usar $ids en todo lo que sigue
+
+        // (4) Obtener/crear el control activo (tu misma lógica, compactada)
+        $control = Control::where('status', 'active')->latest('started_at')->first();
+
+        if (!$control) {
+            $controlIds = Activity::whereIn('id', $ids)->pluck('control_id')->filter()->unique()->values();
+            if ($controlIds->count() === 1) {
+                $maybe = Control::find($controlIds->first());
+                if ($maybe && $maybe->status === 'active') {
+                    $control = $maybe;
+                }
+            }
+        }
+
+        if (!$control) {
+            $control = Control::create([
+                'status'     => 'active',
+                'started_at' => now(),
+                'created_by' => Auth::id(),
+            ]);
+        }
+
+        // (5) Guardar la firma del facilitador en disco (carpeta plural 'facilitators/')
         try {
-            [$meta, $content] = explode(',', $data['facilitator_signature'], 2);
+            [, $content] = explode(',', $data['facilitator_signature'], 2);
             $binary = base64_decode($content);
 
-            $filename = 'facilitator/' . Str::uuid()->toString() . '.png';
+            $filename = 'facilitators/' . Str::uuid()->toString() . '.png';
             Storage::disk('signatures')->put($filename, $binary);
 
             $signaturePath = 'signatures/' . $filename;
@@ -251,26 +295,42 @@ class CheckController extends Controller
             ], 500);
         }
 
-        // Actualizar actividades: marcar como "E" (ejecutadas)
-        Activity::whereIn('id', $activityIds)
-            ->update(['states' => 'E']);
+        // Asegurar que TODAS las actividades queden pegadas al control activo
+        Activity::whereIn('id', $ids)->update(['control_id' => $control->id]);
 
-        // Actualizar o crear cierres (solo guardan firma + auditoría)
-        $today = now()->toDateString();
-        foreach ($activityIds as $activityId) {
-            ActivityClosure::updateOrCreate(
-                ['activity_id' => $activityId],
-                [
-                    'date'                      => $today,
-                    'facilitator_signature_path' => $signaturePath,
-                    'created_by'                => Auth::id(),
-                ]
-            );
-        }
+        // (6) Cerrar lote en una transacción para consistencia
+        DB::transaction(function () use ($ids, $signaturePath, $control) {
+            // (6.a) Marcar las actividades como ejecutadas (y tocar updated_at)
+            Activity::whereIn('id', $ids)->update([
+                'states'     => 'E',
+                'updated_at' => now(),   // <-- NUEVO: fuerza “cambio visible”
+            ]);
 
+            // (6.b) Crear/actualizar closures con el control_id y la firma
+            foreach ($ids as $activityId) {
+                ActivityClosure::updateOrCreate(
+                    ['activity_id' => $activityId], // activity_id es unique()
+                    [
+                        'control_id'                 => $control->id,
+                        'facilitator_signature_path' => $signaturePath,
+                        'created_by'                 => Auth::id(),
+                        // Si tienes un campo 'date' en activity_closures, puedes descomentar:
+                        // 'date' => now()->toDateString(),
+                    ]
+                );
+            }
+
+            // (6.c) Cerrar el control
+            $control->update([
+                'status'      => 'finalize',
+                'finished_at' => now(),
+            ]);
+        });
+
+        // (7) Respuesta al frontend
         return response()->json([
             'success' => true,
-            'message' => 'Las actividades fueron finalizadas correctamente.',
+            'message' => 'Las actividades fueron finalizadas y el control se cerró correctamente.',
         ]);
     }
 
@@ -356,38 +416,92 @@ class CheckController extends Controller
             ];
         });
 
-        // Obtener la fecha estimada
-        $estimatedDate = optional($attendances->first()->activity)->estimated_date;
-
         // Datos de la actividad
         $activity = optional($attendances->first())->activity;
+
+        // Obtener la fecha estimada
+        $estimatedDate = $activity?->getRawOriginal('estimated_date') ?? ($activity?->estimated_date?->toDateString());
 
         // Traer el cierre más reciente de esta actividad (por si hay varios)
         $closure = ActivityClosure::where('activity_id', $activityId)
             ->latest('id')->first();
 
         // Firma del facilitador en base64
+        // Firma del facilitador en base64 (robusto)
         $facilitatorSignature = null;
         if ($closure && $closure->facilitator_signature_path) {
-            $full = storage_path('app/private/' . $closure->facilitator_signature_path);
+            $path = ltrim($closure->facilitator_signature_path, '/'); // p.ej: signatures/facilitators/abc.png
+
+            // 1) Ruta absoluta
+            $full = storage_path('app/private/' . $path);
+
+            // 2) Path relativo al disk 'signatures' (raíz: storage/app/private/signatures)
+            $relative = Str::startsWith($path, 'signatures/')
+                ? Str::after($path, 'signatures/')
+                : $path;
+
+            $content = null;
+
             if (file_exists($full)) {
-                $facilitatorSignature = 'data:image/png;base64,' . base64_encode(file_get_contents($full));
+                $content = file_get_contents($full);
+            } else {
+                // 3) Intenta por el disk (más confiable si el absolute falla por permisos/OS)
+                try {
+                    if (Storage::disk('signatures')->exists($relative)) {
+                        $content = Storage::disk('signatures')->get($relative);
+                    }
+                } catch (\Throwable $e) {
+                    // silencio, probamos fallback
+                }
+            }
+
+            // 4) Fallback singular → plural (histórico)
+            if (!$content && str_contains($path, 'signatures/facilitator/')) {
+                $alt = str_replace('signatures/facilitator/', 'signatures/facilitators/', $path);
+                $altFull = storage_path('app/private/' . $alt);
+                if (file_exists($altFull)) {
+                    $content = file_get_contents($altFull);
+
+                    // (opcional) Corrige la ruta en BD para que no vuelva a fallar
+                    $closure->facilitator_signature_path = $alt;
+                    $closure->save();
+                } else {
+                    // También intenta por disk
+                    $altRel = Str::after($alt, 'signatures/');
+                    if (Storage::disk('signatures')->exists($altRel)) {
+                        $content = Storage::disk('signatures')->get($altRel);
+                        $closure->facilitator_signature_path = $alt;
+                        $closure->save();
+                    }
+                }
+            }
+
+            if (!empty($content)) {
+                $facilitatorSignature = 'data:image/png;base64,' . base64_encode($content);
             }
         }
 
+        $activity = optional($attendances->first())->activity;
+        $activityMeta = [
+            'estimated_date'       => $activity->estimated_date,        // 'Y-m-d' (por tu $casts)
+            'start_time'           => $activity->start_time,            // 'HH:MM:SS' o null
+            'end_time'             => $activity->end_time,              // 'HH:MM:SS' o null
+            'place'                => $activity->place,
+            'facilitator'          => $activity->facilitator,           // OJO: tu columna se llama 'facilitator'
+            'facilitator_document' => $activity->facilitator_document,
+        ];
+
+        // Respuesta JSON final
         return response()->json([
             'attendees'      => $data,
             'estimated_date' => $estimatedDate,
-            'topic'          => optional($attendances->first()->activity)->topic,
-            'closure' => $closure ? [
-                'date'                  => $closure->date,
-                'start_time'            => $closure->start_time,
-                'end_time'              => $closure->end_time,
-                'place'                 => $closure->place,
-                'facilitator_name'      => $closure->facilitator_name,
-                'facilitator_document'  => $closure->facilitator_document,
+            'topic'          => $activity?->topic,
+            'activity'       => $activityMeta,
+
+            // 'closure' solo sigue aportando la firma (los demás campos no existen en esa tabla)
+            'closure' => [
                 'facilitator_signature' => $facilitatorSignature,
-            ] : null,
+            ],
         ]);
     }
 

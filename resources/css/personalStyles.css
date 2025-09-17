@@ -401,7 +401,7 @@ html {
     /* alto y ancho de imagen de fondo */
     height: 800px;
     /* alto y ancho de imagen de fondo */
-    background-image: url('/images/LogoAzloPrin.png');
+    background-image: url('/images/FondoInicio.JPG');
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
@@ -467,22 +467,88 @@ html {
     /*cursor: crosshair;*/
 }
 
-/* Ajustar Tom Select para que se vea como un input Bootstrap */
-.ts-wrapper {
-  width: 100% !important;
+/* Base TS + tipografía más pequeña solo aquí */
+.ts-wrapper.ts-bs { width: 100%; font-size: var(--ts-font-size, 0.8125rem); }
+
+/* Quitar por completo el caret y separador por defecto de TomSelect */
+.ts-wrapper .ts-control::after,
+.ts-wrapper .ts-control::before {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
-.ts-wrapper .ts-control {
-  min-height: calc(1.5em + .75rem + 2px);
-  padding: .375rem .75rem;
-  font-size: 1rem;
+/* Sin "borde interno" ni sombras raras */
+.ts-wrapper.ts-bs .ts-control {
+  display: flex;
+  align-items: center;
   line-height: 1.5;
-  border-radius: .375rem;
-  border: 1px solid #ced4da;
+  background-color: var(--bs-body-bg);
+  background-clip: padding-box;
+  border: 1px solid var(--bs-border-color, #ced4da);
+  border-radius: var(--bs-border-radius, .375rem);
+  box-shadow: none !important;       /* quita sombra/borde interior */
+  overflow-y: hidden;                /* no crece verticalmente */
+  /* caret tipo Bootstrap como background, SIN pseudo-elementos */
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' viewBox='0 0 16 16'%3e%3cpath d='M3.2 6l4.8 4.8L12.8 6z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right .75rem center;
+  background-size: .8em;
 }
 
-/* Espaciado de tags cuando es multiple */
-.ts-wrapper .ts-control .item {
-  margin-right: .25rem;
-  margin-bottom: .125rem;
+/* Focus idéntico a Bootstrap */
+.ts-wrapper.ts-bs .ts-control:focus-within {
+  border-color: var(--bs-primary, #0d6efd);
+  box-shadow: 0 0 0 .25rem rgba(13,110,253,.25);
+  outline: 0;
 }
+
+/* SINGLE: elipsis en una sola línea */
+.ts-wrapper.ts-bs.single .ts-control .item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  padding: 0;
+}
+
+/* MULTI: misma altura fija; una línea + scroll horizontal delgado */
+.ts-wrapper.ts-bs.multi .ts-control {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: .25rem;
+  scrollbar-width: thin;                        /* Firefox */
+  scrollbar-color: rgba(0,0,0,.35) transparent;
+}
+.ts-wrapper.ts-bs.multi .ts-control .item {
+  background: var(--bs-primary-bg-subtle, #e7f1ff);
+  border: 0;
+  border-radius: .375rem;
+  padding: .125rem .375rem;
+  margin: 0;
+  white-space: nowrap;
+}
+/* Cuando ya hay chips, el input no ocupa ancho (evita wrap) */
+.ts-wrapper.ts-bs.multi.has-items .ts-control input {
+  width: 0 !important;
+  min-width: 0 !important;
+}
+
+/* Scrollbar fina en Chromium */
+.ts-wrapper.ts-bs.multi .ts-control::-webkit-scrollbar { height: 4px; }
+.ts-wrapper.ts-bs.multi .ts-control::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,.35);
+  border-radius: 999px;
+}
+.ts-wrapper.ts-bs.multi .ts-control::-webkit-scrollbar-track { background: transparent; }
+
+/* Tamaños opcionales (si usas -sm / -lg en el <select>) — la altura ya viene del JS */
+.ts-wrapper.ts-bs[data-size="sm"] .ts-control { border-radius: var(--bs-border-radius-sm, .25rem); }
+.ts-wrapper.ts-bs[data-size="lg"] .ts-control { border-radius: var(--bs-border-radius-lg, .5rem); }
+
+
+
+
+

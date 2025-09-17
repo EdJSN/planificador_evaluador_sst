@@ -35,7 +35,7 @@
 
                             <div id="actividad_grupo" class="mb-3 d-none">
                                 <x-forms.select label="Actividades del grupo" id="activity_ids_group"
-                                    name="activity_ids[]" col="col-md-12" :options="$activityOptions" multiple />
+                                    name="activity_ids[]" col="col-md-12" class="js-tomselect form-select" :options="$activityOptions" multiple />
                             </div>
                         </div>
                     </div>

@@ -8,7 +8,8 @@ export function initTomSelects(root = document) {
 
     // Config por defecto + data-attributes
     const isMultiple = el.multiple;
-    const placeholder = el.dataset.tsPlaceholder || el.getAttribute("placeholder") || "";
+    const placeholder =
+      el.dataset.tsPlaceholder || el.getAttribute("placeholder") || "";
 
     // maxItems: "null" (texto) => null real | número | por defecto
     let maxItems;
@@ -41,8 +42,26 @@ export function initTomSelects(root = document) {
       persist: false,
       placeholder,
       onInitialize() {
-        this.control_input.placeholder = this.settings.placeholder;
+        // placeholder vacío (si viene vacío)
+        this.control_input.placeholder = this.settings.placeholder || "";
+
+        // Clase para estilos tipo Bootstrap
+        this.wrapper.classList.add("ts-bs");
+
+        // Detectar tamaño si usas form-select-sm / -lg
+        const size = el.classList.contains("form-select-sm")
+          ? "sm"
+          : el.classList.contains("form-select-lg")
+          ? "lg"
+          : "md";
+        this.wrapper.dataset.size = size;
+
+        // Tipografía un poco menor SOLO en TomSelect
+        this.wrapper.style.setProperty("--ts-font-size", "0.875rem");
       },
     });
   });
 }
+
+// (Opcional) Si inicializas dentro de modales dinámicos:
+document.addEventListener("shown.bs.modal", (e) => initTomSelects(e.target));

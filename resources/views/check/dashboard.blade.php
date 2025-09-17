@@ -8,6 +8,9 @@
 
     <script>
         window.activeActivities = @json($selected->values()->all());
+        window.bulkUpdateUrl = "{{ route('check.attendance.bulkUpdate') }}";
     </script>
 
 </x-app-layout>
+
+

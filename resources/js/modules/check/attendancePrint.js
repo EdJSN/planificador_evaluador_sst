@@ -19,14 +19,17 @@ export function setupAttendancePrint() {
                 });
 
                 const result = await response.json();
+                const attendees = Array.isArray(result.attendees) ? result.attendees : [];
 
                 //Fecha estimada de ejecución
-                const attendees = result.attendees;
                 const estimatedDate = result.estimated_date;
                 let formattedDate = '';
                 if (estimatedDate) {
-                    const dateObj = new Date(estimatedDate);
-                    formattedDate = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
+                    const m = String(estimatedDate).match(/^(\d{4})-(\d{2})-(\d{2})/);
+                    if (m) {
+                        const [, yyyy, mm, dd] = m;
+                        formattedDate = `${dd}/${mm}/${yyyy}`;
+                    }
                 }
 
                 function formatTimeTo12h(timeStr) {
@@ -43,14 +46,17 @@ export function setupAttendancePrint() {
                 //Tema de la actividad
                 const topic = result.topic;
 
-                // Closure (puede ser null si no existe)
+                // Metadatos de la actividad 
+                const activityMeta = result.activity || {};
+                const startTime = formatTimeTo12h(activityMeta.start_time) || '';
+                const endTime = formatTimeTo12h(activityMeta.end_time) || '';
+                const place = activityMeta.place || '';
+                const facilitatorName = activityMeta.facilitator || '';
+                const facilitatorDoc = activityMeta.facilitator_document || '';
+
+                // Firma del facilitador 
                 const closure = result.closure || {};
-                const startTime = formatTimeTo12h(closure.start_time) || '';
-                const endTime = formatTimeTo12h(closure.end_time) || '';
-                const place = closure.place || '';
-                const facilitatorName = closure.facilitator_name || '';
-                const facilitatorDoc = closure.facilitator_document || '';
-                const facilitatorSig = closure.facilitator_signature || null; // base64 data:image/png...
+                const facilitatorSig = closure.facilitator_signature || null;
 
                 const doc = new jsPDF();
                 const logo = new Image();

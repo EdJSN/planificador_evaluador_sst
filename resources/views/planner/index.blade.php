@@ -87,7 +87,7 @@
                                 {{ $activity->efficacy_evaluation_date ? \Carbon\Carbon::parse($activity->efficacy_evaluation_date)->format('d/m/Y') : '' }}
                             </td>
                             <td>{{ $activity->responsible }}</td>
-                            <td class="text-center">{{ $activity->coverage }}</td>
+                            <td class="text-center">{{ $activity->coverage_label }}</td>
                             <td>{{ $activity->observations }}</td>
                         </tr>
                     @empty
