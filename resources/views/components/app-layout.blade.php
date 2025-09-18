@@ -22,14 +22,14 @@
                 <img src=" {{ asset('images/logoAzloSide.png') }}" class="sidebar-img">
             </a>
             <ul class="list-unstyled components mb-5 sidebar-links">
-                <li class="active">
+                <li class="{{ request()->routeIs('planner.*') ? 'active' : '' }}">
                     <a href="{{ route('planner.dashboard') }}"><span class="fa fa-pencil-square-o"></span>Planificar</a>
                 </li>
-                <li>
+                <li class="{{ request()->routeIs('employees.*') ? 'active' : '' }}">
                     <a href="{{ route('employees.index') }}"><span class="fa fa-users"></span>Personal</a>
                 </li>
-                <li>
-                    <a href="{{ route('check.index') }}"><span class="fa fa-list-ul"></span>Control</a>
+                <li class="{{ request()->routeIs('check.*') ? 'active' : '' }}">
+                    <a href="{{ route('check.index') }}"><span class="fa fa-list-ul"></span>Asistencia</a>
                 </li>
                 <li>
                     {{--<a href="settings.html"><span class="fa fa-cogs"></span>Ajustes</a>--}}
@@ -42,18 +42,17 @@
             {{-- NavBar --}}
             <nav class="navbar navbar-expand-lg navbar-light bg-light" id="main-navbar">
                 <div class="container-fluid">
-
                     <button type="button" id="sidebarCollapse" class="btn Azlo-dark">
                         <i class="fa fa-bars"></i>
                         <span class="sr-only">Toggle Menu</span>
                     </button>
-                    <button class="btn Azlo-light d-inline-block d-lg-none ml-auto" type="button"
+                    <button class="btn Azlo-light d-inline-block d-lg-none ms-auto" type="button"
                         data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                         <i class="fa fa-bars"></i>
                     </button>
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                        <ul class="nav navbar-nav ml-auto">
+                        <ul class="navbar-nav ms-auto">
                             <li class="nav-item active">
                                 <a class="nav-link" href="{{ route('home') }}">Inicio</a>
                             </li>

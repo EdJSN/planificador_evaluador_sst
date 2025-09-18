@@ -5,7 +5,7 @@
     <div class="card-header text-center Azlo-light">
         <h5 class="mb-0 text-white">Consultar historial</h5>
     </div>
-    <div class="card-body">
+    <div id="card-body-table-check" class="card-body">
         <div class="row my-3">
             <form id="searchActivityForm" class="d-flex">
                 @csrf
@@ -17,7 +17,7 @@
                     <x-buttons.button type="submit" id="filterControlBtn" icon="fa fa-search" text="Buscar" />
                 </div>
             </form>
-            <div class="card-body body-table table-responsive-fixed-header">
+            <div class="card-body body-table table-responsive-fixed-header py-0">
                 <table class="table table-border table-hover table-interactive" id="activitiesResultsTable">
                     <thead class="text-center">
                         <tr>
@@ -33,7 +33,12 @@
             </div>
         </div>
     </div>
-    <div class="card-footer">
+    <div class="card-footer text-center">
+        <div class="row">
+            <div>
+                <x-buttons.button id="btn-double-check" icon="fa fa-search" text="Ver mas" />
+            </div>
+        </div>
     </div>
 </div>
 

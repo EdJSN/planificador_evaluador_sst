@@ -430,8 +430,7 @@ class CheckController extends Controller
         // Firma del facilitador en base64 (robusto)
         $facilitatorSignature = null;
         if ($closure && $closure->facilitator_signature_path) {
-            $path = ltrim($closure->facilitator_signature_path, '/'); // p.ej: signatures/facilitators/abc.png
-
+            $path = ltrim($closure->facilitator_signature_path, '/'); 
             // 1) Ruta absoluta
             $full = storage_path('app/private/' . $path);
 
@@ -483,11 +482,11 @@ class CheckController extends Controller
 
         $activity = optional($attendances->first())->activity;
         $activityMeta = [
-            'estimated_date'       => $activity->estimated_date,        // 'Y-m-d' (por tu $casts)
-            'start_time'           => $activity->start_time,            // 'HH:MM:SS' o null
-            'end_time'             => $activity->end_time,              // 'HH:MM:SS' o null
+            'estimated_date'       => $activity->estimated_date,       
+            'start_time'           => $activity->start_time,           
+            'end_time'             => $activity->end_time,              
             'place'                => $activity->place,
-            'facilitator'          => $activity->facilitator,           // OJO: tu columna se llama 'facilitator'
+            'facilitator'          => $activity->facilitator,          
             'facilitator_document' => $activity->facilitator_document,
         ];
 

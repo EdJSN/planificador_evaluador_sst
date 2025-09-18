@@ -17,7 +17,7 @@
             @endif
         </h5>
     </div>
-    <div class="card-body">
+    <div class="card-body standard-height">
         <div class="card-body body-table table-responsive-fixed-header py-0">
             <table id="attendanceTable" class="table table-border table-hover table-interactive">
                 <thead class="text-center">

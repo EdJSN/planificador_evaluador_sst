@@ -45,187 +45,7 @@
 /* Formatear color de las tablas (body) */
 
 .table-responsive .table tbody td {
-    color: #6c757d;
-}
-
-/* Anchos personalizados para columnas de la tabla planner para mantener armonía en el contenido */
-
-.personal-container th:nth-child(1),
-.personal-container td:nth-child(1),
-.personal-container th:nth-child(2),
-.personal-container td:nth-child(2),
-.personal-container th:nth-child(14),
-.personal-container td:nth-child(14) {
-    width: 300px;
-    min-width: 300px;
-    max-width: 300px;
-    vertical-align: middle;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: normal;
-}
-
-.personal-container th:nth-child(3),
-.personal-container td:nth-child(3),
-.personal-container th:nth-child(18),
-.personal-container td:nth-child(18) {
-    width: 400px;
-    min-width: 400px;
-    max-width: 400px;
-    vertical-align: middle;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: normal;
-}
-
-.personal-container th:nth-child(5),
-.personal-container td:nth-child(5),
-.personal-container th:nth-child(6),
-.personal-container td:nth-child(6),
-.personal-container th:nth-child(7),
-.personal-container td:nth-child(7),
-.personal-container th:nth-child(13),
-.personal-container td:nth-child(13),
-.personal-container th:nth-child(17),
-.personal-container td:nth-child(17) {
-    width: 150px;
-    min-width: 150px;
-    max-width: 150px;
-    vertical-align: middle;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: normal;
-}
-
-.personal-container th:nth-child(8),
-.personal-container td:nth-child(8) {
-    vertical-align: middle;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: normal;
-}
-
-.personal-container th:nth-child(4),
-.personal-container td:nth-child(4),
-.personal-container th:nth-child(9),
-.personal-container td:nth-child(9),
-.personal-container th:nth-child(10),
-.personal-container td:nth-child(10),
-.personal-container th:nth-child(11),
-.personal-container td:nth-child(11),
-.personal-container th:nth-child(12),
-.personal-container td:nth-child(12),
-.personal-container th:nth-child(15),
-.personal-container td:nth-child(15),
-.personal-container th:nth-child(16),
-.personal-container td:nth-child(16) {
-    width: 200px;
-    min-width: 200px;
-    max-width: 200px;
-    vertical-align: middle;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: normal;
-}
-
-/* Anchos personalizados para columnas de la tabla employees para mantener armonía en el contenido */
-
-.container-employees th:nth-child(1),
-.container-employees th:nth-child(1),
-.container-employees th:nth-child(2),
-.container-employees th:nth-child(2),
-.container-employees th:nth-child(3),
-.container-employees th:nth-child(3) {
-    width: 504px;
-    min-width: 504px;
-    max-width: 504px;
-    vertical-align: middle;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: normal;
-}
-
-.container-employees th:nth-child(4),
-.container-employees th:nth-child(4) {
-    width: 168px;
-    min-width: 168px;
-    max-width: 168px;
-    vertical-align: middle;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: normal;
-}
-
-/* Anchos personalizados para columnas de la tabla control de asistencia (check) para mantener armonía en el contenido */
-
-.container-check th:nth-child(1),
-.container-check td:nth-child(1) {
-    width: 504px;
-    min-width: 504px;
-    max-width: 504px;
-    vertical-align: middle;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: normal;
-}
-
-.container-check th:nth-child(2),
-.container-check td:nth-child(2),
-.container-check th:nth-child(3),
-.container-check td:nth-child(3) {
-    width: 252px;
-    min-width: 252px;
-    max-width: 252px;
-    vertical-align: middle;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: normal;
-}
-
-.container-check th:nth-child(5),
-.container-check td:nth-child(5) {
-    width: 336px;
-    min-width: 336px;
-    max-width: 336px;
-    vertical-align: middle;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: normal;
-}
-
-.container-check th:nth-child(4),
-.container-check td:nth-child(4),
-.container-check th:nth-child(6),
-.container-check td:nth-child(6) {
-    width: 168px;
-    min-width: 168px;
-    max-width: 168px;
-    vertical-align: middle;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: normal;
-}
-
-
-/* Anchos personalizados para columnas de la tabla consultar actividades (check) para mantener armonía en el contenido */
-
-.container-activities th:nth-child(1),
-.container-activities td:nth-child(1),
-.container-activities th:nth-child(2),
-.container-activities td:nth-child(2),
-.container-activities th:nth-child(3),
-.container-activities td:nth-child(3),
-.container-activities th:nth-child(4),
-.container-activities td:nth-child(4),
-.container-activities th:nth-child(5),
-.container-activities td:nth-child(5) {
-    width: 420px;
-    min-width: 420px;
-    max-width: 420px;
-    vertical-align: middle;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: normal;
+    color: #6c757d !important;
 }
 
 /* Colores de la empresa */
@@ -464,7 +284,6 @@ html {
     display: block;
     width: 100%;
     height: 70px;
-    /*cursor: crosshair;*/
 }
 
 /* Base TS + tipografía más pequeña solo aquí */
@@ -548,7 +367,65 @@ html {
 .ts-wrapper.ts-bs[data-size="sm"] .ts-control { border-radius: var(--bs-border-radius-sm, .25rem); }
 .ts-wrapper.ts-bs[data-size="lg"] .ts-control { border-radius: var(--bs-border-radius-lg, .5rem); }
 
+#activitiesTable td {
+  word-break: break-word;
+  hyphens: auto;
+}
 
+/* Sidebar link normal */
+.sidebar-links li a {
+    color: rgb(3, 84, 114) !important;
+}
 
+/* Ícono normal */
+.sidebar-links li a span.fa {
+    color: rgb(3, 84, 114);
+}
 
+/* Cuando está activo */
+.sidebar-links li.active a,
+.sidebar-links li.active a span.fa {
+    color: white !important;
+}
 
+#sidebar.active ul li a {
+  text-align: center;
+  font-size: 0; /* truco para ocultar texto */
+}
+
+#sidebar.active ul li a span.fa {
+  font-size: 24px;
+  margin-right: 0;
+}
+
+#sidebar.active ul li a::after {
+  content: none; /* evitar pseudo-elementos si los hubiera */
+}
+
+@media (max-width: 991.98px) {
+  #sidebar {
+    width: 270px;                  /* o 80px si prefieres compacto */
+    transform: translateX(-100%);  /* fuera de pantalla */
+    transition: transform .3s ease;
+    margin-left: 0 !important;     /* anulamos el truco de margin */
+    overflow: hidden;
+  }
+  #sidebar.active {
+    transform: translateX(0);      /* visible */
+  }
+}
+
+.standard-height {
+    max-height: 61vh;
+    min-height: 61vh;
+    overflow-y: auto;
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Reducir espaciado entre líneas de los encabezados de la tabla */
+#activitiesTable th {
+  line-height: 1.3;   /* menos espacio vertical */
+  padding-top: .1rem; /* opcional: ajusta el padding arriba */
+  padding-bottom: .1rem; /* opcional: ajusta el padding abajo */
+}

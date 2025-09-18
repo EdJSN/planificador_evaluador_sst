@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setupAudienceCounter(createForm);
     }
 
-    // Enganchar global (cubre otros selects si aparecen después)
     setupAudienceCounter(document);
 
 
@@ -70,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setupFinalizeActions();
         setupAttendancePrint();
         setupFacilitatorSignature();
+        setupTableToggle('btn-double-check', 'card-body-table-check');
     }
 });
 
