@@ -22,6 +22,7 @@
                             </div>
                             <input type="hidden" id="finalizeActivityIds" name="activity_ids">
                             <input type="hidden" id="facilitatorSignatureInput" name="facilitator_signature">
+                            <input type="hidden" name="confirm_finalize" value="1">
                         </div>
                     </div>
                     <div class="text-center mb-3">

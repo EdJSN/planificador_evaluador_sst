@@ -18,12 +18,20 @@ class CheckController extends Controller
      */
     public function index(Request $request)
     {
-        $idsCsv = (string) $request->query('activity_ids', '');
+        $idsCsv = trim((string) $request->query('activity_ids', ''));
         $ids = collect(explode(',', $idsCsv))
             ->map(fn($v) => (int) trim($v))
             ->filter()
             ->unique()
             ->values();
+
+        if ($ids->isEmpty()) {
+            $ids = collect((array) $request->session()->get('check.active_ids', []))
+                ->map(fn($v) => (int) $v)
+                ->filter()
+                ->unique()
+                ->values();
+        }
 
         if ($ids->isEmpty()) {
             return view('check.dashboard', [
@@ -33,20 +41,42 @@ class CheckController extends Controller
             ]);
         }
 
+        // Solo P/A/R y control null o activo
+        $validIds = Activity::whereIn('id', $ids)
+            ->whereIn('states', ['P', 'A', 'R'])
+            ->where(function ($q) {
+                $q->whereNull('control_id')
+                    ->orWhereHas('control', fn($qq) => $qq->where('status', 'active'));
+            })
+            ->pluck('id')
+            ->values();
+
+        if ($validIds->isEmpty()) {
+            // Nada válido → limpiar sesión y no mostrar nada
+            $request->session()->forget('check.active_ids');
+            return view('check.dashboard', [
+                'attendances' => collect(),
+                'activities'  => collect(),
+                'selected'    => collect(),
+            ]);
+        }
+
+        // Escribe en sesión SOLO lo que realmente vas a mostrar
+        $request->session()->put('check.active_ids', $validIds->all());
+
         $attendances = Attendance::with(['employee.position', 'activity'])
-            ->whereIn('activity_id', $ids)
+            ->whereIn('activity_id', $validIds)
             ->orderBy('employee_id')
             ->get();
 
-        $activities = Activity::whereIn('id', $ids)->get();
+        $activities = Activity::whereIn('id', $validIds)->get();
 
         return view('check.dashboard', [
             'attendances' => $attendances,
             'activities'  => $activities,
-            'selected'    => $ids,
+            'selected'    => $validIds,
         ]);
     }
-
 
     /**
      * Crear un nuevo control de asistencia.
@@ -89,33 +119,45 @@ class CheckController extends Controller
 
     public function prepare(Request $request)
     {
-        // Buscar actividades que estén en estados exportables (P, A, R)
-        $activities = Activity::whereIn('states', ['P', 'A', 'R'])
-            ->with('audiences') // importante: traer audiencias vinculadas
+        // 1) Validación: exigir las actividades a preparar
+        $data = $request->validate([
+            'activity_ids'   => 'required|array|min:1',
+            'activity_ids.*' => 'integer|exists:activities,id',
+        ]);
+
+        $ids = collect($data['activity_ids'])->map(fn($v) => (int)$v)->unique()->values();
+
+        session(['check.active_ids' => $ids->values()->all()]);
+
+        // 2) Traer SOLO esas actividades (y filtrar por estados exportables)
+        $activities = Activity::whereIn('id', $ids)
+            ->whereIn('states', ['P', 'A', 'R'])
+            ->with('audiences:id')    // solo IDs
             ->get();
 
         if ($activities->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No hay actividades exportadas para preparar asistencia.',
-            ]);
+                'message' => 'No hay actividades válidas para preparar.',
+            ], 422);
         }
 
+        // 3) Preparar asistencias únicamente para las audiencias de esas actividades
         $rows = [];
-        $now = now();
+        $now  = now();
 
         foreach ($activities as $activity) {
             $audienceIds = $activity->audiences->pluck('id');
 
-            // Buscar empleados que pertenezcan a esas audiencias
+            // Empleados pertenecientes a las audiencias de esta actividad
             $employees = Employee::whereHas('audiences', function ($q) use ($audienceIds) {
                 $q->whereIn('audiences.id', $audienceIds);
-            })->get();
+            })->pluck('id');
 
-            foreach ($employees as $emp) {
+            foreach ($employees as $empId) {
                 $rows[] = [
                     'activity_id' => $activity->id,
-                    'employee_id' => $emp->id,
+                    'employee_id' => $empId,
                     'attend'      => false,
                     'created_at'  => $now,
                     'updated_at'  => $now,
@@ -123,42 +165,54 @@ class CheckController extends Controller
             }
         }
 
-        Attendance::upsert(
-            $rows,
-            ['activity_id', 'employee_id'],
-            ['attend', 'updated_at']
-        );
+        // 4) Upsert SOLO sobre esas combinaciones
+        if (!empty($rows)) {
+            Attendance::upsert(
+                $rows,
+                ['activity_id', 'employee_id'],
+                ['attend', 'updated_at']
+            );
+        }
+
+        // 5) Guardar en sesión la selección activa 
+        session(['check.active_ids' => $ids->all()]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Asistencias preparadas correctamente (filtradas por audiencias).',
+            'message' => 'Asistencias preparadas correctamente para las actividades seleccionadas.',
+            'activity_ids' => $ids,
         ]);
     }
 
     public function create()
     {
-        // Carga el control ACTIVO y sus datos para la vista create
         $control = Control::where('status', 'active')->first();
 
         if (!$control) {
-            // Si no hay control activo, puedes redirigir a empleados o mostrar un aviso
             return redirect()
                 ->route('employees.index')
                 ->with('info', 'No hay un control activo. Exporta desde Empleados para iniciar uno.');
         }
 
+        // Si usas control_id en Activity (lo pegas al crear grupo), saca los IDs así:
+        $activityIds = Activity::where('control_id', $control->id)->pluck('id');
+
+        // Si no hay “pegadas”, intenta tomar del query param (?activity_ids=1,2,3)
+        if ($activityIds->isEmpty()) {
+            $idsCsv = (string) request()->query('activity_ids', '');
+            $activityIds = collect(explode(',', $idsCsv))
+                ->map(fn($v) => (int) trim($v))
+                ->filter()
+                ->unique()
+                ->values();
+        }
+
         $attendances = Attendance::with(['employee.position', 'activity'])
-            ->where('control_id', $control->id)
+            ->whereIn('activity_id', $activityIds)
             ->orderBy('employee_id')
             ->get();
 
-        // Lista “bonita” de actividades activas en este control (para mostrar en la vista)
-        $activities = Attendance::where('control_id', $control->id)
-            ->with('activity:id,topic')
-            ->get()
-            ->pluck('activity')
-            ->unique('id')
-            ->values();
+        $activities = Activity::whereIn('id', $activityIds)->get();
 
         return view('check.create', compact('control', 'attendances', 'activities'));
     }
@@ -226,51 +280,45 @@ class CheckController extends Controller
 
     public function finalize(Request $request)
     {
-        // (1) Validaciones de entrada (igual que ya tenías)
         $data = $request->validate([
             'password'              => ['required'],
-            'activity_ids'          => 'required|string', // CSV
+            'activity_ids'          => 'required|string',
             'facilitator_signature' => ['required', 'string', 'regex:/^data:image\/png;base64,/'],
         ]);
 
-        // (2) Validar contraseña del usuario autenticado
-        if (!Hash::check($request->password, Auth::user()->password)) {
+        if (!Hash::check($data['password'], Auth::user()->password)) {
+            return response()->json(['success' => false, 'message' => 'La contraseña es incorrecta.'], 401);
+        }
+
+        $idsFromForm = collect(explode(',', $data['activity_ids']))
+            ->map(fn($v) => (int) trim($v))->filter()->unique();
+
+        $sessionIds = collect((array) $request->session()->get('check.active_ids', []))
+            ->map(fn($v) => (int) $v)->filter()->unique();
+
+        $ids = $idsFromForm->intersect($sessionIds)->values()->all();
+        if (empty($ids)) {
             return response()->json([
                 'success' => false,
-                'message' => 'La contraseña es incorrecta.',
-            ], 401);
+                'message' => 'No hay coincidencia con la selección activa.',
+            ], 422);
         }
 
-        // (3) Parsear CSV de actividades → colección de enteros únicos
-        $activityIds = collect(explode(',', $data['activity_ids']))
-            ->map(fn($id) => (int) trim($id))
-            ->filter()
-            ->unique()
-            ->values();
+        // Intentar usar un control ya asociado a estas actividades
+        $controlIdCandidates = Activity::whereIn('id', $ids)->pluck('control_id')->filter()->unique()->values();
 
-        if ($activityIds->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No se recibieron actividades para finalizar.',
-            ], 400);
+        $control = null;
+        if ($controlIdCandidates->count() === 1) {
+            $maybe = Control::find($controlIdCandidates->first());
+            if ($maybe) $control = $maybe;
         }
 
-        // === NUEVO: forzamos array plano para whereIn/foreach
-        $ids = $activityIds->all(); // <-- usar $ids en todo lo que sigue
-
-        // (4) Obtener/crear el control activo (tu misma lógica, compactada)
-        $control = Control::where('status', 'active')->latest('started_at')->first();
-
-        if (!$control) {
-            $controlIds = Activity::whereIn('id', $ids)->pluck('control_id')->filter()->unique()->values();
-            if ($controlIds->count() === 1) {
-                $maybe = Control::find($controlIds->first());
-                if ($maybe && $maybe->status === 'active') {
-                    $control = $maybe;
-                }
-            }
+        // Si no hay o está finalizado, usa el activo más reciente
+        if (!$control || $control->status !== 'active') {
+            $control = Control::where('status', 'active')->latest('started_at')->first();
         }
 
+        // Si aún no hay, crea uno
         if (!$control) {
             $control = Control::create([
                 'status'     => 'active',
@@ -279,58 +327,62 @@ class CheckController extends Controller
             ]);
         }
 
-        // (5) Guardar la firma del facilitador en disco (carpeta plural 'facilitators/')
+        // Guarda firma
         try {
             [, $content] = explode(',', $data['facilitator_signature'], 2);
             $binary = base64_decode($content);
 
             $filename = 'facilitators/' . Str::uuid()->toString() . '.png';
             Storage::disk('signatures')->put($filename, $binary);
-
             $signaturePath = 'signatures/' . $filename;
         } catch (\Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error procesando la firma: ' . $e->getMessage(),
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Error procesando la firma: ' . $e->getMessage()], 500);
         }
 
-        // Asegurar que TODAS las actividades queden pegadas al control activo
+        // Asegura vínculo
         Activity::whereIn('id', $ids)->update(['control_id' => $control->id]);
 
-        // (6) Cerrar lote en una transacción para consistencia
         DB::transaction(function () use ($ids, $signaturePath, $control) {
-            // (6.a) Marcar las actividades como ejecutadas (y tocar updated_at)
             Activity::whereIn('id', $ids)->update([
                 'states'     => 'E',
-                'updated_at' => now(),   // <-- NUEVO: fuerza “cambio visible”
+                'updated_at' => now(),
             ]);
 
-            // (6.b) Crear/actualizar closures con el control_id y la firma
             foreach ($ids as $activityId) {
                 ActivityClosure::updateOrCreate(
-                    ['activity_id' => $activityId], // activity_id es unique()
+                    ['activity_id' => $activityId],
                     [
                         'control_id'                 => $control->id,
                         'facilitator_signature_path' => $signaturePath,
                         'created_by'                 => Auth::id(),
-                        // Si tienes un campo 'date' en activity_closures, puedes descomentar:
-                        // 'date' => now()->toDateString(),
                     ]
                 );
             }
 
-            // (6.c) Cerrar el control
-            $control->update([
-                'status'      => 'finalize',
-                'finished_at' => now(),
-            ]);
+            $quedanPendientes = Activity::where('control_id', $control->id)
+                ->where('states', '!=', 'E')
+                ->exists();
+
+            if (!$quedanPendientes) {
+                $control->update([
+                    'status'      => 'finalize',
+                    'finished_at' => now(),
+                ]);
+            }
         });
 
-        // (7) Respuesta al frontend
+        // limpia sesión
+        $request->session()->forget('check.active_ids');
+
+        $sigueActivo = Activity::where('control_id', $control->id)
+            ->where('states', '!=', 'E')
+            ->exists();
+
         return response()->json([
             'success' => true,
-            'message' => 'Las actividades fueron finalizadas y el control se cerró correctamente.',
+            'message' => 'Actividades finalizadas. ' . ($sigueActivo
+                ? 'El control sigue activo porque hay otras actividades pendientes.'
+                : 'El control se cerró correctamente.'),
         ]);
     }
 
@@ -430,7 +482,7 @@ class CheckController extends Controller
         // Firma del facilitador en base64 (robusto)
         $facilitatorSignature = null;
         if ($closure && $closure->facilitator_signature_path) {
-            $path = ltrim($closure->facilitator_signature_path, '/'); 
+            $path = ltrim($closure->facilitator_signature_path, '/');
             // 1) Ruta absoluta
             $full = storage_path('app/private/' . $path);
 
@@ -482,11 +534,11 @@ class CheckController extends Controller
 
         $activity = optional($attendances->first())->activity;
         $activityMeta = [
-            'estimated_date'       => $activity->estimated_date,       
-            'start_time'           => $activity->start_time,           
-            'end_time'             => $activity->end_time,              
+            'estimated_date'       => $activity->estimated_date,
+            'start_time'           => $activity->start_time,
+            'end_time'             => $activity->end_time,
             'place'                => $activity->place,
-            'facilitator'          => $activity->facilitator,          
+            'facilitator'          => $activity->facilitator,
             'facilitator_document' => $activity->facilitator_document,
         ];
 
