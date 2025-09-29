@@ -88,20 +88,20 @@ export function setupAttendancePrint() {
                     body.push([
                         { content: 'Fecha', colSpan: 1, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
                         { content: formattedDate, colSpan: 2, styles: { halign: 'center', fontSize: 10 } },
-                        { content: 'Hora inicio', colSpan: 1, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 8 } },
-                        { content: startTime, colSpan: 1 },
+                        { content: 'Hora inicio', colSpan: 1, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 7 } },
+                        { content: startTime, colSpan: 1, styles: { halign: 'center', fontSize: 8 } },
                         { content: 'Hora fin', colSpan: 1, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
-                        { content: endTime, colSpan: 1 },
+                        { content: endTime, colSpan: 1, styles: { halign: 'center', fontSize: 8 } },
                         { content: 'Lugar', colSpan: 1, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
-                        { content: place, colSpan: 4 }
+                        { content: place, colSpan: 4, styles: { halign: 'center', fontSize: 10 } }
                     ]);
                     body.push([
                         { content: 'Facilitador', colSpan: 2, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
-                        { content: facilitatorName, colSpan: 2 },
+                        { content: facilitatorName, colSpan: 2, styles: { halign: 'center', fontSize: 10 } },
                         { content: 'Documento', colSpan: 2, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
-                        { content: facilitatorDoc, colSpan: 2 },
+                        { content: facilitatorDoc, colSpan: 2, styles: { halign: 'center', fontSize: 10 } },
                         { content: 'Firma', colSpan: 2, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
-                        { content: '', colSpan: 2 }
+                        { content: '', colSpan: 2, styles: { halign: 'center', fontSize: 10 } }
                     ]);
                     body.push([
                         { content: 'Tipo de evento', colSpan: 2, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
@@ -128,14 +128,21 @@ export function setupAttendancePrint() {
                         { content: 'Firma', colSpan: 3, styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } }
                     ]);
 
-                    attendees.forEach(att => {
+                    if (attendees.length === 0) {
+                        // Fila única cuando no hay asistentes
                         body.push([
-                            { content: att.name || '', colSpan: 4 },
-                            { content: att.document || '', colSpan: 2 },
-                            { content: att.position || '', colSpan: 3 },
-                            { content: '', colSpan: 3 } // columna firma
+                            { content: 'No hubo asistentes.', colSpan: 12, styles: { halign: 'center' } }
                         ]);
-                    });
+                    } else {
+                        attendees.forEach(att => {
+                            body.push([
+                                { content: att.name || '', colSpan: 4 },
+                                { content: att.document || '', colSpan: 2 },
+                                { content: att.position || '', colSpan: 3 },
+                                { content: '', colSpan: 3 } // firma
+                            ]);
+                        });
+                    }
 
                     // Sección observaciones
                     body.push([{ content: 'III. Observaciones', colSpan: 12, styles: { fillColor: [5, 190, 192], fontStyle: 'bold', halign: 'center', textColor: [255, 255, 255] } }]);

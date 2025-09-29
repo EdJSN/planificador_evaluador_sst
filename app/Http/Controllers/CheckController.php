@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class CheckController extends Controller
@@ -436,124 +437,114 @@ class CheckController extends Controller
 
     public function printAttendees(Request $request)
     {
-        $activityId = $request->input('activity_id');
+        try {
+            $activityId = (int) $request->input('activity_id');
 
-        $attendances = Attendance::with(['activity', 'employee.position'])
-            ->where('activity_id', $activityId)
-            ->where('attend', 1)
-            ->get();
+            // 1) Asegura la actividad (para metadata SIEMPRE)
+            $activity = Activity::findOrFail($activityId);
 
-        if ($attendances->isEmpty()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'No hay asistentes registrados para esta actividad.',
-                'attendees' => [],
-                'closure' => null,
-            ]);
-        }
+            // 2) Trae asistentes marcados SÍ (puede quedar vacío)
+            $attendances = Attendance::with(['activity', 'employee.position'])
+                ->where('activity_id', $activityId)
+                ->where('attend', 1)
+                ->get();
 
-        // Mapear asistentes con firma en base64 si existe
-        $data = $attendances->map(function ($att) {
-            $signatureBase64 = null;
-
-            if ($att->employee->file_path && file_exists(storage_path('app/private/signatures/' . $att->employee->file_path))) {
-                $file = file_get_contents(storage_path('app/private/signatures/' . $att->employee->file_path));
-                $signatureBase64 = 'data:image/png;base64,' . base64_encode($file);
-            }
-            return [
-                'name'      => $att->employee->full_name ?? '',
-                'document'  => $att->employee->document ?? '',
-                'position'  => $att->employee->position->position ?? '',
-                'file_path' => $signatureBase64,
-            ];
-        });
-
-        // Datos de la actividad
-        $activity = optional($attendances->first())->activity;
-
-        // Obtener la fecha estimada
-        $estimatedDate = $activity?->getRawOriginal('estimated_date') ?? ($activity?->estimated_date?->toDateString());
-
-        // Traer el cierre más reciente de esta actividad (por si hay varios)
-        $closure = ActivityClosure::where('activity_id', $activityId)
-            ->latest('id')->first();
-
-        // Firma del facilitador en base64
-        // Firma del facilitador en base64 (robusto)
-        $facilitatorSignature = null;
-        if ($closure && $closure->facilitator_signature_path) {
-            $path = ltrim($closure->facilitator_signature_path, '/');
-            // 1) Ruta absoluta
-            $full = storage_path('app/private/' . $path);
-
-            // 2) Path relativo al disk 'signatures' (raíz: storage/app/private/signatures)
-            $relative = Str::startsWith($path, 'signatures/')
-                ? Str::after($path, 'signatures/')
-                : $path;
-
-            $content = null;
-
-            if (file_exists($full)) {
-                $content = file_get_contents($full);
-            } else {
-                // 3) Intenta por el disk (más confiable si el absolute falla por permisos/OS)
-                try {
-                    if (Storage::disk('signatures')->exists($relative)) {
-                        $content = Storage::disk('signatures')->get($relative);
-                    }
-                } catch (\Throwable $e) {
-                    // silencio, probamos fallback
+            // 3) Mapear asistentes con firma (puede quedar vacío y está bien)
+            $data = $attendances->map(function ($att) {
+                $signatureBase64 = null;
+                if ($att->employee->file_path && file_exists(storage_path('app/private/signatures/' . $att->employee->file_path))) {
+                    $file = file_get_contents(storage_path('app/private/signatures/' . $att->employee->file_path));
+                    $signatureBase64 = 'data:image/png;base64,' . base64_encode($file);
                 }
-            }
+                return [
+                    'name'      => $att->employee->full_name ?? '',
+                    'document'  => $att->employee->document ?? '',
+                    'position'  => $att->employee->position->position ?? '',
+                    'file_path' => $signatureBase64,
+                ];
+            });
 
-            // 4) Fallback singular → plural (histórico)
-            if (!$content && str_contains($path, 'signatures/facilitator/')) {
-                $alt = str_replace('signatures/facilitator/', 'signatures/facilitators/', $path);
-                $altFull = storage_path('app/private/' . $alt);
-                if (file_exists($altFull)) {
-                    $content = file_get_contents($altFull);
+            // 4) Metadata SIEMPRE (ya no depende de attendances)
+            $estimatedDate = $activity->getRawOriginal('estimated_date') ?? ($activity->estimated_date?->toDateString());
+            $activityMeta = [
+                'estimated_date'       => $activity->estimated_date,
+                'start_time'           => $activity->start_time,
+                'end_time'             => $activity->end_time,
+                'place'                => $activity->place,
+                'facilitator'          => $activity->facilitator,
+                'facilitator_document' => $activity->facilitator_document,
+            ];
 
-                    // (opcional) Corrige la ruta en BD para que no vuelva a fallar
-                    $closure->facilitator_signature_path = $alt;
-                    $closure->save();
+            // 5) Firma facilitador (igual que ya tenías)
+            $closure = ActivityClosure::where('activity_id', $activityId)->latest('id')->first();
+            $facilitatorSignature = null;
+            if ($closure && $closure->facilitator_signature_path) {
+                $path = ltrim($closure->facilitator_signature_path, '/');
+                $full = storage_path('app/private/' . $path);
+                $relative = Str::startsWith($path, 'signatures/')
+                    ? Str::after($path, 'signatures/')
+                    : $path;
+
+                $content = null;
+                if (file_exists($full)) {
+                    $content = file_get_contents($full);
                 } else {
-                    // También intenta por disk
-                    $altRel = Str::after($alt, 'signatures/');
-                    if (Storage::disk('signatures')->exists($altRel)) {
-                        $content = Storage::disk('signatures')->get($altRel);
+                    try {
+                        if (Storage::disk('signatures')->exists($relative)) {
+                            $content = Storage::disk('signatures')->get($relative);
+                        }
+                    } catch (\Throwable $e) {
+                    }
+                }
+
+                if (!$content && str_contains($path, 'signatures/facilitator/')) {
+                    $alt = str_replace('signatures/facilitator/', 'signatures/facilitators/', $path);
+                    $altFull = storage_path('app/private/' . $alt);
+                    if (file_exists($altFull)) {
+                        $content = file_get_contents($altFull);
                         $closure->facilitator_signature_path = $alt;
                         $closure->save();
+                    } else {
+                        $altRel = Str::after($alt, 'signatures/');
+                        if (Storage::disk('signatures')->exists($altRel)) {
+                            $content = Storage::disk('signatures')->get($altRel);
+                            $closure->facilitator_signature_path = $alt;
+                            $closure->save();
+                        }
                     }
+                }
+
+                if (!empty($content)) {
+                    $facilitatorSignature = 'data:image/png;base64,' . base64_encode($content);
                 }
             }
 
-            if (!empty($content)) {
-                $facilitatorSignature = 'data:image/png;base64,' . base64_encode($content);
-            }
+            // 6) Respuesta JSON (SIEMPRE JSON)
+            return response()->json([
+                'success'        => true,
+                'message'        => $attendances->isEmpty()
+                    ? 'No hay asistentes registrados para esta actividad.'
+                    : 'OK',
+                'attendees'      => $data,                  // puede ir vacío []
+                'estimated_date' => $estimatedDate,
+                'topic'          => $activity->topic,
+                'activity'       => $activityMeta,
+                'closure'        => [
+                    'facilitator_signature' => $facilitatorSignature,
+                ],
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Actividad no encontrada.',
+            ], 404);
+        } catch (\Throwable $e) {
+            Log::error('printAttendees error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo preparar los datos del PDF.',
+            ], 500);
         }
-
-        $activity = optional($attendances->first())->activity;
-        $activityMeta = [
-            'estimated_date'       => $activity->estimated_date,
-            'start_time'           => $activity->start_time,
-            'end_time'             => $activity->end_time,
-            'place'                => $activity->place,
-            'facilitator'          => $activity->facilitator,
-            'facilitator_document' => $activity->facilitator_document,
-        ];
-
-        // Respuesta JSON final
-        return response()->json([
-            'attendees'      => $data,
-            'estimated_date' => $estimatedDate,
-            'topic'          => $activity?->topic,
-            'activity'       => $activityMeta,
-
-            // 'closure' solo sigue aportando la firma (los demás campos no existen en esa tabla)
-            'closure' => [
-                'facilitator_signature' => $facilitatorSignature,
-            ],
-        ]);
     }
 
     /**
