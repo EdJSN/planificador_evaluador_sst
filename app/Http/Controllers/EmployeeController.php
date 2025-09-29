@@ -201,37 +201,47 @@ class EmployeeController extends Controller
         }
 
         $contents = Storage::disk('signatures')->get($employee->file_path);
-        $base64   = base64_encode($contents);
-        $mime     = 'image/png';
-        $dataUrl  = "data:{$mime};base64,{$base64}";
+        // Deducir el mime por la extensión guardada
+        $ext = strtolower(pathinfo($employee->file_path, PATHINFO_EXTENSION));
+        $mime = ($ext === 'jpg' || $ext === 'jpeg') ? 'image/jpeg' : 'image/png';
+        $base64  = base64_encode($contents);
+        $dataUrl = "data:{$mime};base64,{$base64}";
 
         return response()->json(['data_url' => $dataUrl], 200);
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Guarda la imagen base64 en el disco privado "signatures" y devuelve la ruta relativa.
+    | Guarda la imagen base64 en el disco privado "signatures" y devuelve la ruta correspondiente.
     |--------------------------------------------------------------------------
     */
     private function storeSignatureBase64(string $dataUrl, string $document): string
     {
-        // Acepta solo PNG/JPEG, normaliza a .png si te aseguras que viene PNG
-        if (!preg_match('#^data:image/(png|jpeg);base64,#i', $dataUrl)) {
+        // Detecta el mime real del Data URL
+        if (!preg_match('#^data:image/(png|jpeg);base64,#i', $dataUrl, $m)) {
             throw new \RuntimeException('Formato de firma inválido.');
         }
+        $ext = strtolower($m[1]) === 'jpeg' ? 'jpg' : 'png'; // normaliza jpeg → jpg
 
-        $dataUrl = preg_replace('#^data:image/\w+;base64,#i', '', $dataUrl);
-        $binary  = base64_decode(str_replace(' ', '+', $dataUrl), true);
-
+        $base64 = preg_replace('#^data:image/\w+;base64,#i', '', $dataUrl);
+        $binary = base64_decode(str_replace(' ', '+', $base64), true);
         if ($binary === false) {
             throw new \RuntimeException('No se pudo decodificar la firma.');
         }
 
-        $fileName = 'firma_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $document) . '_' . time() . '_' . substr(bin2hex(random_bytes(4)), 0, 8) . '.png';
+        // Sanitiza el documento para usarlo en el nombre
+        $safeDoc = preg_replace('/[^A-Za-z0-9_\-]/', '_', $document);
+        $fileName = sprintf('firma_%s_%d_%s.%s', $safeDoc, time(), substr(bin2hex(random_bytes(4)), 0, 8), $ext);
 
-        Storage::disk('signatures')->put($fileName, $binary);
+        // Asegura que el directorio exista (deploys limpios)
+        $fs = Storage::disk('signatures');
+        if (method_exists($fs, 'path')) {
+            @mkdir($fs->path(''), 0775, true);
+        }
 
-        return $fileName; // relativo a storage/app/private/signatures
+        $fs->put($fileName, $binary);
+
+        return $fileName;
     }
 
     /*

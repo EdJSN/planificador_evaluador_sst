@@ -282,14 +282,10 @@ class CheckController extends Controller
     public function finalize(Request $request)
     {
         $data = $request->validate([
-            'password'              => ['required'],
+            'password'              => ['required', 'current_password'],
             'activity_ids'          => 'required|string',
             'facilitator_signature' => ['required', 'string', 'regex:/^data:image\/png;base64,/'],
         ]);
-
-        if (!Hash::check($data['password'], Auth::user()->password)) {
-            return response()->json(['success' => false, 'message' => 'La contraseña es incorrecta.'], 401);
-        }
 
         $idsFromForm = collect(explode(',', $data['activity_ids']))
             ->map(fn($v) => (int) trim($v))->filter()->unique();

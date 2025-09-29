@@ -65,7 +65,6 @@ class Activity extends Model
 
     public function control()
     {
-        // muchos-a-muchos a través de attendances
         return $this->belongsTo(Control::class);
     }
 
