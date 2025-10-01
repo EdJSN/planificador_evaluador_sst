@@ -111,17 +111,54 @@ class Activity extends Model
 
     /**
      * Para mostrar en la tabla de consulta (ej: "50%").
-    **/
+     **/
     public function getCoverageLabelAttribute(): string
     {
-        $value = $this->coverage;
+        $required = $this->number_participants;
+        $executed = $this->executed_count;
+        $pct      = $this->coverage;
 
-        // Cuando no haya total mostrar "—".
-        if ($value === null) {
+        // Si NO hay requerido, NI ejecutado, NI porcentaje = "—"
+        if (is_null($required) && is_null($executed) && is_null($pct)) {
             return '—';
         }
 
-        // Entero y agregar el símbolo %
-        return ((int) $value) . '%';
+        // Si falta el %, pero se puede calcular
+        if (is_null($pct) && !is_null($executed) && (int) $required > 0) {
+            $pct = (int) round(($executed / (int) $required) * 100, 0);
+        }
+
+        $requiredLabel = is_null($required) ? '—' : (int) $required;
+        $executedLabel = is_null($executed) ? '—' : (int) $executed;
+        $pctLabel      = is_null($pct)      ? '—' : ((int) $pct) . '%';
+
+        return "Requerido: {$requiredLabel} | Ejecutado: {$executedLabel} | {$pctLabel}";
+    }
+
+    public function getExecutedCountAttribute($value): ?int
+    {
+        // Si viene precargado por withCount
+        if (!is_null($value)) {
+            return (int) $value;
+        }
+
+        // Si la relación está cargada
+        if ($this->relationLoaded('attendances')) {
+            if ($this->attendances->count() === 0) {
+                return null; 
+            }
+            return $this->attendances->where('attend', true)->count();
+        }
+
+        // Si no está cargada
+        $exists = \App\Models\Attendance::where('activity_id', $this->id)->exists();
+        if (!$exists) {
+            return null;
+        }
+
+        // Contar presentes
+        return \App\Models\Attendance::where('activity_id', $this->id)
+            ->where('attend', true)
+            ->count();
     }
 }

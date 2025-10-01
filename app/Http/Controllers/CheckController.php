@@ -42,12 +42,14 @@ class CheckController extends Controller
             ]);
         }
 
-        // Solo P/A/R y control null o activo
+        // Solo P/A/R y control null, activo o finalizado
         $validIds = Activity::whereIn('id', $ids)
             ->whereIn('states', ['P', 'A', 'R'])
             ->where(function ($q) {
                 $q->whereNull('control_id')
-                    ->orWhereHas('control', fn($qq) => $qq->where('status', 'active'));
+                    ->orWhereHas('control', function ($qq) {
+                        $qq->whereIn('status', ['active', 'finalize']);
+                    });
             })
             ->pluck('id')
             ->values();
@@ -70,7 +72,11 @@ class CheckController extends Controller
             ->orderBy('employee_id')
             ->get();
 
-        $activities = Activity::whereIn('id', $validIds)->get();
+        $activities = Activity::whereIn('id', $validIds)
+            ->withCount(['attendances as executed_count' => function ($q) {
+                $q->where('attend', true);
+            }])
+            ->get();
 
         return view('check.dashboard', [
             'attendances' => $attendances,
@@ -171,7 +177,7 @@ class CheckController extends Controller
             Attendance::upsert(
                 $rows,
                 ['activity_id', 'employee_id'],
-                ['attend', 'updated_at']
+                ['updated_at']
             );
         }
 
@@ -213,7 +219,11 @@ class CheckController extends Controller
             ->orderBy('employee_id')
             ->get();
 
-        $activities = Activity::whereIn('id', $activityIds)->get();
+        $activities = Activity::whereIn('id', $activityIds)
+            ->withCount(['attendances as executed_count' => function ($q) {
+                $q->where('attend', true);
+            }])
+            ->get();
 
         return view('check.create', compact('control', 'attendances', 'activities'));
     }
@@ -522,7 +532,7 @@ class CheckController extends Controller
                 'message'        => $attendances->isEmpty()
                     ? 'No hay asistentes registrados para esta actividad.'
                     : 'OK',
-                'attendees'      => $data,                  
+                'attendees'      => $data,
                 'estimated_date' => $estimatedDate,
                 'topic'          => $activity->topic,
                 'activity'       => $activityMeta,

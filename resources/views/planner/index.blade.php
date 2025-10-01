@@ -34,10 +34,8 @@
             </thead>
             <tbody>
                 @forelse ($activities as $activity)
-                    <tr data-id="{{ $activity->id }}" 
-                        data-thematic_axis="{{ $activity->thematic_axis ?? '' }}"
-                        data-topic="{{ $activity->topic ?? '' }}" 
-                        data-objective="{{ $activity->objective ?? '' }}"
+                    <tr data-id="{{ $activity->id }}" data-thematic_axis="{{ $activity->thematic_axis ?? '' }}"
+                        data-topic="{{ $activity->topic ?? '' }}" data-objective="{{ $activity->objective ?? '' }}"
                         data-place="{{ $activity->place ?? '' }}"
                         data-start_time="{{ $activity->start_time ? \Carbon\Carbon::parse($activity->start_time)->format('H:i') : '' }}"
                         data-end_time="{{ $activity->end_time ? \Carbon\Carbon::parse($activity->end_time)->format('H:i') : '' }}"
@@ -59,11 +57,13 @@
                         <td>{{ $activity->topic }}</td>
                         <td>{{ $activity->objective }}</td>
                         <td>{{ $activity->place }}</td>
-                        <td>{{ $activity->start_time ? \Carbon\Carbon::parse($activity->start_time)->format('h:i A') : '' }}</td>
-                        <td>{{ $activity->end_time ? \Carbon\Carbon::parse($activity->end_time)->format('h:i A') : '' }}</td>
+                        <td>{{ $activity->start_time ? \Carbon\Carbon::parse($activity->start_time)->format('h:i A') : '' }}
+                        </td>
+                        <td>{{ $activity->end_time ? \Carbon\Carbon::parse($activity->end_time)->format('h:i A') : '' }}
+                        </td>
                         <td>{{ $activity->audiences->pluck('name')->join(', ') }}</td>
                         <td>{{ $activity->facilitator }}</td>
-                        <td>{{ $activity->duration !== null ? number_format($activity->duration, 1) : '' }}</td>
+                        <td>{{ $activity->duration !== null ? number_format($activity->duration, 2) : '' }}</td>
                         <td>{{ $activity->number_participants }}</td>
                         <td>
                             {{ $activity->estimated_date ? \Carbon\Carbon::parse($activity->estimated_date)->format('d/m/Y') : '' }}

@@ -170,7 +170,7 @@ export function setupAttendancePrint() {
 
                     // Sección observaciones
                     body.push([{ content: 'III. Observaciones', colSpan: 12, styles: { fillColor: [5, 190, 192], fontStyle: 'bold', halign: 'center', textColor: [255, 255, 255] } }]);
-                    
+
                     body.push([{ content: line1 || '', colSpan: 12, styles: { halign: 'left', fontSize: 10, cellPadding: { left: 2, right: 2, top: 2, bottom: 2 }, overflow: 'hidden' } }]);
                     body.push([{ content: line2 || '', colSpan: 12, styles: { halign: 'left', fontSize: 10, cellPadding: { left: 2, right: 2, top: 2, bottom: 2 }, overflow: 'hidden' } }]);
                     body.push([{ content: line3 || '', colSpan: 12, styles: { halign: 'left', fontSize: 10, cellPadding: { left: 2, right: 2, top: 2, bottom: 2 }, overflow: 'hidden' } }]);
@@ -189,12 +189,14 @@ export function setupAttendancePrint() {
 
                     const facilitatorRowIndex = body.findIndex(r => r[0] && r[0].content === 'Facilitador');
 
+                    const FOOTER_SPACE = 10;
+
                     autoTable(doc, {
                         startY: 10,
                         body: body,
                         theme: 'grid',
                         tableWidth: '100%',
-                        margin: { left: 10, right: 10 },
+                        margin: { top: 8, left: 10, right: 10, bottom: FOOTER_SPACE },
                         styles: { fontSize: 10, valign: 'middle', lineColor: [0, 0, 0], overflow: 'linebreak' },
                         bodyStyles: { cellPadding: { top: 2, right: 2, bottom: 2, left: 2 } },
                         columnStyles: columnStyles,
@@ -247,14 +249,25 @@ export function setupAttendancePrint() {
 
                         didDrawPage: (data) => {
                             const text = 'Autorizo a GRUPO AZLO SAS BIC en el manejo y tratamiento de mis datos personales.';
-                            const pageHeight = doc.internal.pageSize.getHeight();
+                            const pageW = doc.internal.pageSize.getWidth();
+                            const pageH = doc.internal.pageSize.getHeight();
+
                             doc.setFontSize(8);
                             doc.setTextColor(50);
-                            doc.text(text, doc.internal.pageSize.getWidth() / 2, pageHeight - 20, { align: 'center' });
+
+                            const y = pageH - (FOOTER_SPACE / 2);
+                            doc.text(text, pageW / 2, y, { align: 'center' });
+
+                            const isLast = data.pageNumber === doc.internal.getNumberOfPages();
+                            if (!isLast) return;
                         }
                     });
 
-                    doc.save('Certificado_Asistencia_Digital.pdf');
+                    const fileDateSuffix = formattedDate
+                        ? '_' + formattedDate.replace(/\//g, '-')  // dd-mm-yyyy
+                        : '';
+
+                    doc.save(`Certificado_Asistencia${fileDateSuffix}.pdf`);
                 };
 
             } catch (err) {

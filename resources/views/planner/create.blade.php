@@ -39,7 +39,7 @@
                 <x-forms.input label="Documento (Facilitador)" id="facilitator_document" name="facilitator_document"
                     col='col-md-2' />
                 <x-forms.input label="Duración" type="number" id="duration" name="duration" col="col-md-2"
-                    step="0.1" />
+                    step="0.01" />
                 <x-forms.input label="N° de participantes" type="number" id="number_participants"
                     name="number_participants" col="col-md-2" />
             </div>
