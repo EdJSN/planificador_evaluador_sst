@@ -34,13 +34,16 @@
             </thead>
             <tbody>
                 @forelse ($activities as $activity)
-                    <tr data-id="{{ $activity->id }}" data-thematic_axis="{{ $activity->thematic_axis ?? '' }}"
-                        data-topic="{{ $activity->topic ?? '' }}" data-objective="{{ $activity->objective ?? '' }}"
+                    <tr data-id="{{ $activity->id }}" 
+                        data-thematic_axis="{{ $activity->thematic_axis ?? '' }}"
+                        data-topic="{{ $activity->topic ?? '' }}" 
+                        data-objective="{{ $activity->objective ?? '' }}"
                         data-place="{{ $activity->place ?? '' }}"
                         data-start_time="{{ $activity->start_time ? \Carbon\Carbon::parse($activity->start_time)->format('H:i') : '' }}"
                         data-end_time="{{ $activity->end_time ? \Carbon\Carbon::parse($activity->end_time)->format('H:i') : '' }}"
                         data-audiences="{{ $activity->audiences->pluck('id')->implode(',') }}"
                         data-facilitator="{{ $activity->facilitator ?? '' }}"
+                        data-facilitator_document="{{ $activity->facilitator_document ?? '' }}"
                         data-duration="{{ $activity->duration ?? '' }}"
                         data-number_participants="{{ $activity->number_participants ?? '' }}"
                         data-estimated_date="{{ $activity->estimated_date ? \Carbon\Carbon::parse($activity->estimated_date)->format('Y-m-d') : '' }}"

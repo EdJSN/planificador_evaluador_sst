@@ -43,6 +43,13 @@ export function setupAttendancePrint() {
                     return `${hour}:${minutes} ${ampm}`;
                 }
 
+                function stripHtml(html) {
+                    if (!html) return '';
+                    const d = document.createElement('div');
+                    d.innerHTML = html;
+                    return d.textContent.replace(/\u00A0/g, ' ').trim();
+                }
+
                 //Tema de la actividad
                 const topic = result.topic;
 
@@ -53,6 +60,7 @@ export function setupAttendancePrint() {
                 const place = activityMeta.place || '';
                 const facilitatorName = activityMeta.facilitator || '';
                 const facilitatorDoc = activityMeta.facilitator_document || '';
+                const observations = activityMeta.observations || '';
 
                 // Firma del facilitador 
                 const closure = result.closure || {};
@@ -62,13 +70,29 @@ export function setupAttendancePrint() {
                 const logo = new Image();
                 logo.src = '/images/logoAzloSide.png';
 
+                // Formato celdas de "Observaciones"
+                const obsText = stripHtml(observations) || '—';
+                const PAGE_W = doc.internal.pageSize.getWidth();
+                const TABLE_LR = 20;
+                const PAD_LR = 4;
+                const FUDGE = 5;
+                const WRAP_SHRINK = 3;
+                const obsWrapWidth = (PAGE_W - TABLE_LR - PAD_LR) + FUDGE - WRAP_SHRINK;
+                const _prevFS = doc.getFontSize();
+                doc.setFontSize(10);
+                const wrapped = doc.splitTextToSize(obsText, obsWrapWidth);
+                doc.setFontSize(_prevFS);
+                const line1 = wrapped[0] || '';
+                const line2 = wrapped[1] || '';
+                const line3 = wrapped[2] || '';
+
                 logo.onload = () => {
                     const body = [];
 
                     // Sección encabezado
                     body.push([{ content: 'CONTROL DE ASISTENCIA', colSpan: 12, styles: { fillColor: [5, 190, 192], fontStyle: 'bold', halign: 'center', textColor: [255, 255, 255] } }]);
                     body.push([
-                        { content: '', rowSpan: 2, colSpan: 3 }, // LOGO
+                        { content: '', rowSpan: 2, colSpan: 3 }, // Logo
                         { content: 'Código', colSpan: 2, styles: { fontStyle: 'bold', halign: 'center', fontSize: 7, textColor: [5, 190, 192] } },
                         { content: 'Versión', colSpan: 1, styles: { fontStyle: 'bold', halign: 'center', fontSize: 7, textColor: [5, 190, 192] } },
                         { content: 'Fecha', colSpan: 2, styles: { fontStyle: 'bold', halign: 'center', fontSize: 6, textColor: [5, 190, 192] } },
@@ -90,7 +114,7 @@ export function setupAttendancePrint() {
                         { content: formattedDate, colSpan: 2, styles: { halign: 'center', fontSize: 10 } },
                         { content: 'Hora inicio', colSpan: 1, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 7 } },
                         { content: startTime, colSpan: 1, styles: { halign: 'center', fontSize: 8 } },
-                        { content: 'Hora fin', colSpan: 1, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
+                        { content: 'Hora fin', colSpan: 1, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 9 } },
                         { content: endTime, colSpan: 1, styles: { halign: 'center', fontSize: 8 } },
                         { content: 'Lugar', colSpan: 1, styles: { fillColor: [220, 220, 220], halign: 'center', fontSize: 10 } },
                         { content: place, colSpan: 4, styles: { halign: 'center', fontSize: 10 } }
@@ -146,9 +170,10 @@ export function setupAttendancePrint() {
 
                     // Sección observaciones
                     body.push([{ content: 'III. Observaciones', colSpan: 12, styles: { fillColor: [5, 190, 192], fontStyle: 'bold', halign: 'center', textColor: [255, 255, 255] } }]);
-                    for (let i = 0; i < 3; i++) {
-                        body.push([{ content: '', colSpan: 12 }]);
-                    }
+                    
+                    body.push([{ content: line1 || '', colSpan: 12, styles: { halign: 'left', fontSize: 10, cellPadding: { left: 2, right: 2, top: 2, bottom: 2 }, overflow: 'hidden' } }]);
+                    body.push([{ content: line2 || '', colSpan: 12, styles: { halign: 'left', fontSize: 10, cellPadding: { left: 2, right: 2, top: 2, bottom: 2 }, overflow: 'hidden' } }]);
+                    body.push([{ content: line3 || '', colSpan: 12, styles: { halign: 'left', fontSize: 10, cellPadding: { left: 2, right: 2, top: 2, bottom: 2 }, overflow: 'hidden' } }]);
 
                     // Calcular anchos
                     const pageWidth = doc.internal.pageSize.getWidth();
@@ -170,7 +195,8 @@ export function setupAttendancePrint() {
                         theme: 'grid',
                         tableWidth: '100%',
                         margin: { left: 10, right: 10 },
-                        styles: { fontSize: 10, valign: 'middle', lineColor: [0, 0, 0] },
+                        styles: { fontSize: 10, valign: 'middle', lineColor: [0, 0, 0], overflow: 'linebreak' },
+                        bodyStyles: { cellPadding: { top: 2, right: 2, bottom: 2, left: 2 } },
                         columnStyles: columnStyles,
                         didDrawCell: (data) => {
                             // Logo en encabezado
@@ -182,10 +208,9 @@ export function setupAttendancePrint() {
                                 doc.addImage(logo, 'PNG', x, y, imgWidth, imgHeight);
                             }
 
-                            // dibujar firma del facilitador si existe y estamos en la fila correcta
+                            // Dibujar firma del facilitador si existe
                             if (typeof facilitatorRowIndex !== 'undefined' && facilitatorRowIndex !== -1) {
                                 if (data.row.index === facilitatorRowIndex) {
-                                    // la celda de firma queda al final (colSpan 2) - ajustamos para dibujar en las columnas finales
                                     if (facilitatorSig && data.column.index >= 10) {
                                         const margin = 2;
                                         const sigWidth = data.cell.width - margin * 2;
@@ -202,8 +227,8 @@ export function setupAttendancePrint() {
                             }
 
                             // Firmas en sección asistentes
-                            const asistentesStartRow = body.findIndex(r => r[0].content === 'II. Asistentes') + 2;
-                            if (data.row.index >= asistentesStartRow) {
+                            const asistentesStartRow = body.findIndex(r => r?.[0]?.content === 'II. Asistentes') + 2;
+                            if (asistentesStartRow > 1 && data.row.index >= asistentesStartRow) {
                                 const attendee = attendees[data.row.index - asistentesStartRow];
                                 if (attendee?.file_path && data.column.index >= 9 && data.column.index <= 11) {
                                     const sigWidth = data.cell.width - 3;
@@ -238,5 +263,6 @@ export function setupAttendancePrint() {
         }
     });
 }
+
 
 

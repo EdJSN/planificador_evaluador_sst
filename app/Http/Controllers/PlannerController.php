@@ -87,7 +87,7 @@ class PlannerController extends Controller
             ], 422);
         } catch (\Exception $e) {
             // Captura cualquier otro error inesperado en el servidor
-            \Log::error('Error al crear actividad: ' . $e->getMessage() . ' en ' . $e->getFile() . ':' . $e->getLine());
+            Log::error('Error al crear actividad: ' . $e->getMessage() . ' en ' . $e->getFile() . ':' . $e->getLine());
             return response()->json(['message' => 'Ocurrió un error interno del servidor al crear la actividad.'], 500);
         }
     }
@@ -141,7 +141,7 @@ class PlannerController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Error al actualizar actividad: ' . $e->getMessage() . ' en ' . $e->getFile() . ':' . $e->getLine());
+            Log::error('Error al actualizar actividad: ' . $e->getMessage() . ' en ' . $e->getFile() . ':' . $e->getLine());
             return response()->json(['message' => 'Ocurrió un error interno del servidor al actualizar la actividad.'], 500);
         }
     }

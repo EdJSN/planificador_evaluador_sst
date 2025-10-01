@@ -88,7 +88,7 @@ class Activity extends Model
         // Participantes esperados
         $total = (int) ($this->number_participants ?? 0);
 
-        // Evitar división por cero: si no hay total, asumimos 0%
+        // Evitar división por cero.
         if ($total <= 0) {
             $this->coverage = 0;
             $this->save();
@@ -103,7 +103,6 @@ class Activity extends Model
         // Porcentaje entero (0-100)
         $coverage = (int) round(($attended / $total) * 100, 0);
 
-        // Persistimos en la columna 'coverage'
         $this->coverage = $coverage;
         $this->save();
 
@@ -112,18 +111,17 @@ class Activity extends Model
 
     /**
      * Para mostrar en la tabla de consulta (ej: "50%").
-     * Úsalo como: {{ $activity->coverage_label }}
-     */
+    **/
     public function getCoverageLabelAttribute(): string
     {
         $value = $this->coverage;
 
-        // Si quieres que cuando no haya total muestre "—", mantenlo así.
+        // Cuando no haya total mostrar "—".
         if ($value === null) {
             return '—';
         }
 
-        // Aseguramos entero y agregamos el símbolo %
+        // Entero y agregar el símbolo %
         return ((int) $value) . '%';
     }
 }

@@ -83,17 +83,17 @@ export function setupEmployeePrint() {
             body.push([
                 { content: 'Nombres', colSpan: 4, styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } },
                 { content: 'Documento', colSpan: 2, styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } },
-                { content: 'Cargo', colSpan: 2, styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } },
-                { content: 'Firma', colSpan: 4, styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } }
+                { content: 'Cargo', colSpan: 4, styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } },
+                { content: 'Firma', colSpan: 2, styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } }
             ]);
             // DATOS DE TABLA HTML
             table.querySelectorAll('tbody tr').forEach(row => {
                 const cells = row.querySelectorAll('td');
                 body.push([
                     { content: cells[0]?.innerText || '', colSpan: 4 },
-                    { content: cells[1]?.innerText || '', colSpan: 2 },
-                    { content: cells[2]?.innerText || '', colSpan: 2 },
-                    { content: '', colSpan: 4 } // Espacio vacío para firma
+                    { content: cells[1]?.innerText || '', colSpan: 2, styles: { halign: 'center' } },
+                    { content: cells[2]?.innerText || '', colSpan: 4 },
+                    { content: '', colSpan: 2 } // Espacio vacío para firma
                 ]);
             });
 

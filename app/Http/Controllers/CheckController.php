@@ -460,7 +460,7 @@ class CheckController extends Controller
                 ];
             });
 
-            // 4) Metadata SIEMPRE (ya no depende de attendances)
+            // 4) Metadata
             $estimatedDate = $activity->getRawOriginal('estimated_date') ?? ($activity->estimated_date?->toDateString());
             $activityMeta = [
                 'estimated_date'       => $activity->estimated_date,
@@ -469,9 +469,10 @@ class CheckController extends Controller
                 'place'                => $activity->place,
                 'facilitator'          => $activity->facilitator,
                 'facilitator_document' => $activity->facilitator_document,
+                'observations'         => $activity->observations,
             ];
 
-            // 5) Firma facilitador (igual que ya tenías)
+            // 5) Firma facilitador 
             $closure = ActivityClosure::where('activity_id', $activityId)->latest('id')->first();
             $facilitatorSignature = null;
             if ($closure && $closure->facilitator_signature_path) {
@@ -515,13 +516,13 @@ class CheckController extends Controller
                 }
             }
 
-            // 6) Respuesta JSON (SIEMPRE JSON)
+            // 6) Respuesta JSON
             return response()->json([
                 'success'        => true,
                 'message'        => $attendances->isEmpty()
                     ? 'No hay asistentes registrados para esta actividad.'
                     : 'OK',
-                'attendees'      => $data,                  // puede ir vacío []
+                'attendees'      => $data,                  
                 'estimated_date' => $estimatedDate,
                 'topic'          => $activity->topic,
                 'activity'       => $activityMeta,
