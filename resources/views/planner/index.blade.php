@@ -115,3 +115,34 @@
         </div>
     </div>
 </div>
+
+{{-- Tarjeta de Cobertura (siempre visible) --}}
+<div class="container px-3 pt-3">
+    <div class="row justify-content-center">
+        <div class="col-sm-10 col-md-8 col-lg-6 col-xl-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="fw-semibold text-muted mb-2">
+                        Cobertura total {{ $yearToShow ?? date('Y') }}
+                    </div>
+                    <div class="d-flex justify-content-center gap-4">
+                        <div>
+                            <small class="text-muted d-block">Requerido</small>
+                            <div class="fs-5">{{ (int) ($summaryTotals['required'] ?? 0) }}</div>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Ejecutado</small>
+                            <div class="fs-5">{{ (int) ($summaryTotals['executed'] ?? 0) }}</div>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">% Total</small>
+                            <div class="fs-5">
+                                {{ is_null($summaryTotals['pct'] ?? null) ? '—' : ((int) $summaryTotals['pct']) . '%' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

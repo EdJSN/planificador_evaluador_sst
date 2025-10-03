@@ -8,25 +8,138 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PlannerController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        $activities = Activity::orderBy('id', 'desc')->get();
+        // Listado de actividades para la tabla del dashboard
+        $activities = Activity::with('audiences')
+            ->withCount(['attendances as executed_count' => function ($q) {
+                $q->where('attend', true);
+            }])
+            ->orderByDesc('estimated_date')
+            ->get();
+
         $audienceOptions = Audience::pluck('name', 'id')->toArray();
 
-        return view('planner.dashboard', compact('activities', 'audienceOptions'));
+        // === RESUMEN por AÑO (sin duplicar "required") ===
+        // 1) Requerido por año (SOLO activities)
+        $requiredPerYear = Activity::query()
+            ->whereNotNull('estimated_date')
+            ->selectRaw('YEAR(estimated_date) as yr, COALESCE(SUM(number_participants),0) as required')
+            ->groupBy('yr');
+
+        // 2) Ejecutado por año (SOLO attendances con attend=1)
+        $executedPerYear = DB::table('attendances')
+            ->join('activities', 'attendances.activity_id', '=', 'activities.id')
+            ->whereNotNull('activities.estimated_date')
+            ->where('attendances.attend', 1)
+            ->selectRaw('YEAR(activities.estimated_date) as yr, COUNT(*) as executed')
+            ->groupBy('yr');
+
+        // 3) Unir ambos resultados
+        $rows = DB::query()
+            ->fromSub($requiredPerYear, 'r')
+            ->leftJoinSub($executedPerYear, 'e', 'e.yr', '=', 'r.yr')
+            ->selectRaw('r.yr, r.required, COALESCE(e.executed,0) as executed')
+            ->orderByDesc('r.yr')
+            ->get();
+
+        // 4) Formato para la vista
+        $totalsByYear = $rows->mapWithKeys(function ($r) {
+            $req = (int) $r->required;
+            $exe = (int) $r->executed;
+            $pct = $req > 0 ? (int) round(($exe / $req) * 100) : null;
+
+            return [
+                (string) $r->yr => [
+                    'required' => $req,
+                    'executed' => $exe,
+                    'pct'      => $pct,
+                ],
+            ];
+        });
+
+        // Años disponibles y selección para la tarjeta
+        $years       = $totalsByYear->keys()->values();
+        $yearToShow  = $request->query('year', $years->first());
+        $summaryTotals = $totalsByYear[$yearToShow] ?? ['required' => 0, 'executed' => 0, 'pct' => null];
+
+        return view('planner.dashboard', [
+            'activities'     => $activities,
+            'audienceOptions' => $audienceOptions,
+            'totalsByYear'   => $totalsByYear,
+            'years'          => $years,
+            'yearToShow'     => $yearToShow,
+            'summaryTotals'  => $summaryTotals,
+        ]);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $activities = Activity::all();
-        
-        return view('planner.index', compact('activities'));
+        // Listado para la tabla
+        $activities = Activity::with('audiences')
+            ->withCount(['attendances as executed_count' => function ($q) {
+                $q->where('attend', true);
+            }])
+            ->orderByDesc('estimated_date')
+            ->get();
+
+        // === RESUMEN por AÑO (sin duplicar "required") ===
+        // 1) Requerido por año (SOLO activities)
+        $requiredPerYear = Activity::query()
+            ->whereNotNull('estimated_date')
+            ->selectRaw('YEAR(estimated_date) as yr, COALESCE(SUM(number_participants),0) as required')
+            ->groupBy('yr');
+
+        // 2) Ejecutado por año (SOLO attendances con attend=1)
+        $executedPerYear = DB::table('attendances')
+            ->join('activities', 'attendances.activity_id', '=', 'activities.id')
+            ->whereNotNull('activities.estimated_date')
+            ->where('attendances.attend', 1)
+            ->selectRaw('YEAR(activities.estimated_date) as yr, COUNT(*) as executed')
+            ->groupBy('yr');
+
+        // 3) Unir ambos resultados
+        $rows = DB::query()
+            ->fromSub($requiredPerYear, 'r')
+            ->leftJoinSub($executedPerYear, 'e', 'e.yr', '=', 'r.yr')
+            ->selectRaw('r.yr, r.required, COALESCE(e.executed,0) as executed')
+            ->orderByDesc('r.yr')
+            ->get();
+
+        // 4) Formato para la vista
+        $totalsByYear = $rows->mapWithKeys(function ($r) {
+            $req = (int) $r->required;
+            $exe = (int) $r->executed;
+            $pct = $req > 0 ? (int) round(($exe / $req) * 100) : null;
+
+            return [
+                (string) $r->yr => [
+                    'required' => $req,
+                    'executed' => $exe,
+                    'pct'      => $pct,
+                ],
+            ];
+        });
+
+        // Años disponibles y selección para la tarjeta
+        $years         = $totalsByYear->keys()->values();
+        $yearToShow    = $request->query('year', $years->first());
+        $summaryTotals = $totalsByYear[$yearToShow] ?? ['required' => 0, 'executed' => 0, 'pct' => null];
+
+        return view('planner.index', [
+            'activities'    => $activities,
+            'totalsByYear'  => $totalsByYear,
+            'years'         => $years,
+            'yearToShow'    => $yearToShow,
+            'summaryTotals' => $summaryTotals,
+        ]);
     }
 
     /**
@@ -230,6 +343,3 @@ class PlannerController extends Controller
         //
     }
 }
-
-
-

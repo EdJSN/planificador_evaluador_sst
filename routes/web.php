@@ -39,6 +39,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/check/attendance/finalize', [CheckController::class, 'finalize'])->name('attendance.finalize');
     Route::post('/check/search', [CheckController::class, 'searchActivities'])->name('activities.search');
     Route::resource('check', CheckController::class);
+    Route::post('/check/activities/{activity}/unlink', [CheckController::class, 'unlinkFromControl'])->name('check.activities.unlink');
     
     // Ruta /home 
     Route::get('/home', [HomeController::class, 'index'])->name('home');

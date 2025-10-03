@@ -4,12 +4,7 @@
 <div class="card" id="activeControlCard">
     <div class="card-header text-center Azlo-light">
         @php
-            $activeActivities = $attendances
-                ->unique('activity_id')
-                ->map(function ($attendance) {
-                    return $attendance->activity->topic ?? '';
-                })
-                ->filter();
+            $activeActivities = isset($activities) ? $activities->pluck('topic')->filter()->values() : collect();
         @endphp
         <h5 id="activeActivitiesTitle" class="mb-0 text-white">
             Control de asistencia activo
@@ -17,8 +12,28 @@
                 : {{ $activeActivities->join(' • ') }}
             @endif
         </h5>
-    </div>
+        {{-- Mini listado de actividades con botón "Desvincular" --}}
+        @if (isset($activities) && $activities->count())
+            <div class="bg-white text-dark rounded p-2 mt-2">
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    @foreach ($activities as $activity)
+                        <div class="d-inline-flex align-items-center border rounded-pill px-3 py-1 bg-light">
+                            <span class="small">{{ $activity->topic ?? 'Actividad #' . $activity->id }}</span>
 
+                            @if ($activity->states !== 'E')
+                                <button type="button" class="btn btn-sm btn-outline-danger ms-2 unlink-activity"
+                                    data-url="{{ route('check.activities.unlink', $activity) }}">
+                                    Desvincular
+                                </button>
+                            @else
+                                <span class="ms-2 text-muted small">—</span>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+    </div>
     <div class="card-body body-table table-responsive-fixed-header py-0 standard-height">
         <table id="attendanceTable" class="table table-border table-hover table-interactive">
             <thead class="text-center">

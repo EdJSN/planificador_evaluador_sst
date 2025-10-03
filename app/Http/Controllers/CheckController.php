@@ -554,6 +554,80 @@ class CheckController extends Controller
         }
     }
 
+    public function unlinkFromControl(Request $request, Activity $activity)
+    {
+        // No permitir si ya está ejecutada o tiene cierre
+        if ($activity->states === 'E') {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se puede desvincular una actividad ya ejecutada.',
+            ], 422);
+        }
+
+        $hasClosure = ActivityClosure::where('activity_id', $activity->id)->exists();
+        if ($hasClosure) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La actividad tiene un cierre generado. No puede desvincularse.',
+            ], 422);
+        }
+
+        // Remover siempre de la selección activa en sesión (si existe)
+        $newIds = collect((array) $request->session()->get('check.active_ids', []))
+            ->map(fn($v) => (int) $v)
+            ->reject(fn($v) => $v === (int) $activity->id)
+            ->values();
+
+        $request->session()->put('check.active_ids', $newIds->all());
+
+        // Caso A: pertenece a un control (grupo)
+        if (!empty($activity->control_id)) {
+            $oldControlId = (int) $activity->control_id;
+
+            DB::transaction(function () use ($activity, $oldControlId) {
+                // Quitar vínculo
+                $activity->update(['control_id' => null]);
+
+                // Recalcular estado del control
+                $control = Control::find($oldControlId);
+                if (!$control) return;
+
+                $remaining = Activity::where('control_id', $oldControlId)->get();
+
+                if ($remaining->isEmpty()) {
+                    // Sin actividades: eliminar control para evitar "huérfanos"
+                    $control->delete();
+                    return;
+                }
+
+                $hasPending = $remaining->contains(fn($a) => in_array($a->states, ['P', 'A', 'R'], true));
+
+                $control->update([
+                    'status'      => $hasPending ? 'active' : 'finalize',
+                    'finished_at' => $hasPending ? null : now(),
+                ]);
+            });
+
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Actividad desvinculada del control.',
+                // para grupos basta recargar la misma página
+            ]);
+        }
+
+        // Caso B: actividad individual (sin control_id)
+        // Generamos URL para recargar la vista sin ese id en el querystring
+        $redirect = route('check.create', [
+            'activity_ids' => $newIds->implode(','),
+        ]);
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Actividad retirada de la selección actual.',
+            'redirect' => $redirect,
+        ]);
+    }
+
     /**
      * Display the specified resource.
      */

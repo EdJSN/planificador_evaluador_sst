@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('activities', function (Blueprint $table) { //método pra ccreación de tablas
+        Schema::create('activities', function (Blueprint $table) {
             $table->id(); 
             $table->string('thematic_axis', 500);
             $table->string('topic', 500);

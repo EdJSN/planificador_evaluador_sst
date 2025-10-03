@@ -21,6 +21,7 @@ import { setupExportListModal } from "./modules/planner/exportListModal";
 import { setupEmployeeCreate, setupEmployeeEdit, setupEmployeeDelete } from './modules/employees/employeeActions';
 import { setupEmployeePrint } from './modules/employees/employeePrint';
 import './modules/employees/signature';
+import { setupAudienceCounter } from './modules/employees/audienceCounter';
 
 // Módulo controles
 import { setupCheckAttendance } from "./modules/check/checkActions";
@@ -28,7 +29,7 @@ import { setupFinalizeActions } from "./modules/check/finalizeActions";
 import "./modules/check/activitySearch";
 import { setupAttendancePrint } from './modules/check/attendancePrint';
 import { setupFacilitatorSignature } from './modules/check/facilitatorSignature';
-import { setupAudienceCounter } from './modules/employees/audienceCounter';
+import "./modules/check/unlinkActivity";
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Módulos generales ---
