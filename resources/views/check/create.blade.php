@@ -14,17 +14,14 @@
         </h5>
         {{-- Mini listado de actividades con botón "Desvincular" --}}
         @if (isset($activities) && $activities->count())
-            <div class="bg-white text-dark rounded p-2 mt-2">
+            <div class="text-dark p- mt-1">
                 <div class="d-flex flex-wrap justify-content-center gap-2">
                     @foreach ($activities as $activity)
-                        <div class="d-inline-flex align-items-center border rounded-pill px-3 py-1 bg-light">
-                            <span class="small">{{ $activity->topic ?? 'Actividad #' . $activity->id }}</span>
-
+                        <div class="d-inline-flex align-items-center border rounded-pill px-3 py-1 gap-2 bg-light">
+                            <span >{{ $activity->topic ?? 'Actividad #' . $activity->id }} </span>
                             @if ($activity->states !== 'E')
-                                <button type="button" class="btn btn-sm btn-outline-danger ms-2 unlink-activity"
-                                    data-url="{{ route('check.activities.unlink', $activity) }}">
-                                    Desvincular
-                                </button>
+                                <x-buttons.small-button class="unlink-activity" variant="outline-danger"
+                                icon="fa fa-ban" data-url="{{ route('check.activities.unlink', $activity) }}"/>
                             @else
                                 <span class="ms-2 text-muted small">—</span>
                             @endif
