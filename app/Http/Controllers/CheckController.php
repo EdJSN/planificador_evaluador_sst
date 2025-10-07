@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\{Activity, ActivityClosure, Attendance, Control, Employee};
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
@@ -291,10 +290,11 @@ class CheckController extends Controller
 
     public function finalize(Request $request)
     {
+        // 1) Validar password + ids; la firma pasa a ser OPCIONAL aquí
         $data = $request->validate([
             'password'              => ['required', 'current_password'],
             'activity_ids'          => 'required|string',
-            'facilitator_signature' => ['required', 'string', 'regex:/^data:image\/png;base64,/'],
+            'facilitator_signature' => ['nullable', 'string', 'regex:/^data:image\/png;base64,/'],
         ]);
 
         $idsFromForm = collect(explode(',', $data['activity_ids']))
@@ -334,16 +334,41 @@ class CheckController extends Controller
             ]);
         }
 
-        // Guarda firma
-        try {
-            [, $content] = explode(',', $data['facilitator_signature'], 2);
-            $binary = base64_decode($content);
+        // === NOVEDAD: buscar firma ya existente (por control o por actividad) ===
+        $existingClosure = null;
+        if ($controlIdCandidates->count() === 1) {
+            $existingClosure = ActivityClosure::where('control_id', $controlIdCandidates->first())
+                ->whereNotNull('facilitator_signature_path')
+                ->latest('id')->first();
+        }
+        if (!$existingClosure) {
+            $existingClosure = ActivityClosure::whereIn('activity_id', $ids)
+                ->whereNotNull('facilitator_signature_path')
+                ->latest('id')->first();
+        }
 
-            $filename = 'facilitators/' . Str::uuid()->toString() . '.png';
-            Storage::disk('signatures')->put($filename, $binary);
-            $signaturePath = 'signatures/' . $filename;
-        } catch (\Throwable $e) {
-            return response()->json(['success' => false, 'message' => 'Error procesando la firma: ' . $e->getMessage()], 500);
+        // Si viene una nueva firma, la guardamos; si no, usamos la anterior (si existe)
+        $signaturePath = $existingClosure?->facilitator_signature_path;
+
+        if (!empty($data['facilitator_signature'])) {
+            try {
+                [, $content] = explode(',', $data['facilitator_signature'], 2);
+                $binary = base64_decode($content);
+
+                $filename = 'facilitators/' . Str::uuid()->toString() . '.png';
+                Storage::disk('signatures')->put($filename, $binary);
+                $signaturePath = 'signatures/' . $filename;
+            } catch (\Throwable $e) {
+                return response()->json(['success' => false, 'message' => 'Error procesando la firma: ' . $e->getMessage()], 500);
+            }
+        }
+
+        // Si llegados aquí NO tenemos firma, la exigimos (comportamiento anterior)
+        if (empty($signaturePath)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Se requiere la firma del facilitador.',
+            ], 422);
         }
 
         // Asegura vínculo
@@ -625,6 +650,68 @@ class CheckController extends Controller
             'success'  => true,
             'message'  => 'Actividad retirada de la selección actual.',
             'redirect' => $redirect,
+        ]);
+    }
+
+    public function facilitatorSignature(Request $request)
+    {
+        // IDs desde el query (?activity_ids=1,2) o desde la sesión (check.active_ids)
+        $idsCsv = (string) $request->query('activity_ids', '');
+        $ids = collect(explode(',', $idsCsv))->map(fn($v) => (int)trim($v))->filter()->unique();
+
+        if ($ids->isEmpty()) {
+            $ids = collect((array) $request->session()->get('check.active_ids', []))
+                ->map(fn($v) => (int)$v)->filter()->unique();
+        }
+
+        if ($ids->isEmpty()) {
+            return response()->json(['has' => false]);
+        }
+
+        // Intentar por control
+        $controlId = Activity::whereIn('id', $ids)
+            ->whereNotNull('control_id')
+            ->value('control_id');
+
+        $closure = null;
+        if ($controlId) {
+            $closure = ActivityClosure::where('control_id', $controlId)
+                ->whereNotNull('facilitator_signature_path')
+                ->latest('id')->first();
+        }
+
+        // Si no hubo por control, buscar por cualquiera de esas actividades
+        if (!$closure) {
+            $closure = ActivityClosure::whereIn('activity_id', $ids)
+                ->whereNotNull('facilitator_signature_path')
+                ->latest('id')->first();
+        }
+
+        if (!$closure) {
+            return response()->json(['has' => false]);
+        }
+
+        $path = ltrim($closure->facilitator_signature_path, '/');
+        $full = storage_path('app/private/' . $path);
+
+        $content = null;
+        if (file_exists($full)) {
+            $content = file_get_contents($full);
+        } else {
+            // si usas disk('signatures'), intentar allí
+            $relative = Str::after($path, 'signatures/');
+            if (Storage::disk('signatures')->exists($relative)) {
+                $content = Storage::disk('signatures')->get($relative);
+            }
+        }
+
+        if (!$content) {
+            return response()->json(['has' => false]);
+        }
+
+        return response()->json([
+            'has'      => true,
+            'data_url' => 'data:image/png;base64,' . base64_encode($content),
         ]);
     }
 

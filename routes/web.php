@@ -40,6 +40,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/check/search', [CheckController::class, 'searchActivities'])->name('activities.search');
     Route::resource('check', CheckController::class);
     Route::post('/check/activities/{activity}/unlink', [CheckController::class, 'unlinkFromControl'])->name('check.activities.unlink');
+    Route::get('/check/facilitator-signature', [CheckController::class, 'facilitatorSignature'])->name('check.facilitator.signature');
     
     // Ruta /home 
     Route::get('/home', [HomeController::class, 'index'])->name('home');
