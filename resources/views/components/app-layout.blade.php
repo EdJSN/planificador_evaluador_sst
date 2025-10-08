@@ -46,7 +46,7 @@
                         <i class="fa fa-bars"></i>
                         <span class="sr-only">Toggle Menu</span>
                     </button>
-                    <button class="btn Azlo-light d-inline-block d-lg-none ms-auto" type="button"
+                    <button type="button" class="btn Azlo-light d-inline-block d-lg-none "
                         data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                         <i class="fa fa-bars"></i>
@@ -56,12 +56,12 @@
                             <li class="nav-item active">
                                 <a class="nav-link" href="{{ route('home') }}">Inicio</a>
                             </li>
-                            <li class="nav-item">
+                            {{--<li class="nav-item">
                                 <a class="nav-link" href="profile.html">Perfil</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="settings.html">Usuarios</a>
-                            </li>
+                            </li>--}}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('logout') }}"
                                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

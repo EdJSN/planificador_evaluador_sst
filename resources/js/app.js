@@ -1,6 +1,5 @@
 // Punto de entrada que inicializa todos los módulos JS al cargar el DOM
 import './main';
-import './bootstrap';
 import '../css/style.css';
 import '../css/personalStyles.css';
 
