@@ -23,17 +23,17 @@
             <input type="hidden" name="id"
                 id="{{ isset($is_edit_mode) ? 'editActivityId' : 'createActivityId' }}">
             <div class="row">
-                <x-forms.input label="Eje temático" id="thematic_axis" name="thematic_axis" />
-                <x-forms.input label="Tema" id="topic" name="topic" />
+                <x-forms.input label="Eje temático*" id="thematic_axis" name="thematic_axis" />
+                <x-forms.input label="Tema*" id="topic" name="topic" />
             </div>
             <div class="row">
-                <x-forms.input label="Objetivo" id="objective" name="objective" />
+                <x-forms.input label="Objetivo*" id="objective" name="objective" />
                 <x-forms.input label="Lugar" id="place" name="place" col="col-md-2" />
                 <x-forms.input type="time" label="Hora inicio" id="start_time" name="start_time" col='col-md-2' />
                 <x-forms.input type="time" label="Hora fin" id="end_time" name="end_time" col='col-md-2' />
             </div>
             <div class="row">
-                <x-forms.select label="Dirigido a" id="audiences" name="audiences[]" col="col-md-3" :options="$audienceOptions"
+                <x-forms.select label="Dirigido a*" id="audiences" name="audiences[]" col="col-md-3" :options="$audienceOptions"
                     class="js-tomselect form-select" data-placeholder="Seleccione las áreas" multiple />
                 <x-forms.input label="Facilitador" id="facilitator" name="facilitator" col="col-md-3" />
                 <x-forms.input label="Documento (Facilitador)" id="facilitator_document" name="facilitator_document"
@@ -44,13 +44,13 @@
                     name="number_participants" col="col-md-2" />
             </div>
             <div class="row">
-                <x-forms.input label="Fecha estimada de ejecución" type="date" id="estimated_date"
+                <x-forms.input label="Fecha estimada de ejecución*" type="date" id="estimated_date"
                     name="estimated_date" col="col-md-2" />
                 <x-forms.input label="Métodos de evaluación" id="evaluation_methods" name="evaluation_methods"
                     col="col-md-3" />
                 <x-forms.input label="Recursos" id="resources" name="resources" col="col-md-3" />
                 <x-forms.input label="Presupuesto" id="budget" name="budget" col="col-md-3" />
-                <x-forms.select label="Estado" id="states" name="states" col="col-md-1" :options="['P' => 'P', 'A' => 'A', 'R' => 'R', 'E' => 'E']" />
+                <x-forms.select label="Estado*" id="states" name="states" col="col-md-1" :options="['P' => 'P', 'A' => 'A', 'R' => 'R', 'E' => 'E']" />
             </div>
             <div class="row">
                 <x-forms.input label="Evaluación de la eficacia" id="efficacy_evaluation" name="efficacy_evaluation"

@@ -15,16 +15,16 @@
                     <input type="hidden" id="editFormMethod" name="_method" value="POST">
 
                     <div class="mb-3">
-                        <x-forms.input label="Nombres" id="names" name="names" col='col-md-12' autofocus />
+                        <x-forms.input label="Nombres*" id="names" name="names" col='col-md-12' autofocus />
                     </div>
                     <div class="mb-3">
-                        <x-forms.input label="Apellido" id="lastname1" name="lastname1" col='col-md-12' />
+                        <x-forms.input label="Apellido*" id="lastname1" name="lastname1" col='col-md-12' />
                     </div>
                     <div class="mb-3">
-                        <x-forms.input label="Apellido (opcional)" id="lastname2" name="lastname2" col='col-md-12' />
+                        <x-forms.input label="Segundo Apellido" id="lastname2" name="lastname2" col='col-md-12' />
                     </div>
                     <div class="mb-3">
-                        <x-forms.input label="Documento" id="document" name="document" col='col-md-12' />
+                        <x-forms.input label="Documento*" id="document" name="document" col='col-md-12' />
                     </div>
                     {{-- Traer array de cargos al select --}}
                     @php
@@ -32,7 +32,7 @@
                             ['' => 'Seleccione un cargo'] + $positions->pluck('position', 'id')->toArray();
                     @endphp
                     <div class="mb-3">
-                        <x-forms.select label="Cargo" id="position_id" name="position_id" col="col-md-12"
+                        <x-forms.select label="Cargo*" id="position_id" name="position_id" col="col-md-12"
                             :options="$positionOptions" />
                     </div>
                     {{-- Traer array de audiencias al select --}}
@@ -40,12 +40,12 @@
                         $audienceOptions = \App\Models\Audience::pluck('name', 'id')->toArray();
                     @endphp
                     <div class="mb-3">
-                        <x-forms.select label="Área/Rol" id="audiences" name="audiences[]" col='col-md-12'
+                        <x-forms.select label="Área/Rol*" id="audiences" name="audiences[]" col='col-md-12'
                             class="js-tomselect form-select" data-placeholder="Seleccione las áreas" :options="$audienceOptions" multiple />
                     </div>
                     {{-- Canva para firma digital --}}
                     <div class="mb-3 mx-3">
-                        <label for="signatureInput" class="form-label">Firma</label>
+                        <label for="signatureInput" class="form-label">Firma*</label>
                         <div class="signature-wrapper">
                             <div class="signature-canvas-container">
                                 <canvas id="signatureCanvas"></canvas>

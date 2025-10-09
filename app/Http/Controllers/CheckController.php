@@ -75,6 +75,8 @@ class CheckController extends Controller
             ->withCount(['attendances as executed_count' => function ($q) {
                 $q->where('attend', true);
             }])
+            ->orderByDesc('estimated_date')
+            ->orderByDesc('id')
             ->get();
 
         return view('check.dashboard', [
@@ -222,6 +224,8 @@ class CheckController extends Controller
             ->withCount(['attendances as executed_count' => function ($q) {
                 $q->where('attend', true);
             }])
+            ->orderByDesc('estimated_date')
+            ->orderByDesc('id')
             ->get();
 
         return view('check.create', compact('control', 'attendances', 'activities'));

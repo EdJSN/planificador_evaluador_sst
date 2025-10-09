@@ -19,7 +19,7 @@
                     <th scope="col">Dirigido a</th>
                     <th scope="col">Facilitador</th>
                     <th scope="col">Duración</th>
-                    <th scope="col">N° de participantes</th>
+                    <th scope="col">N°</th>
                     <th scope="col">Fecha estimada de ejecución</th>
                     <th scope="col">Métodos de evaluación</th>
                     <th scope="col">Recursos</th>
