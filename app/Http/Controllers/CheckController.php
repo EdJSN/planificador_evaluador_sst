@@ -75,8 +75,6 @@ class CheckController extends Controller
             ->withCount(['attendances as executed_count' => function ($q) {
                 $q->where('attend', true);
             }])
-            ->orderByDesc('estimated_date')
-            ->orderByDesc('id')
             ->get();
 
         return view('check.dashboard', [
@@ -224,8 +222,6 @@ class CheckController extends Controller
             ->withCount(['attendances as executed_count' => function ($q) {
                 $q->where('attend', true);
             }])
-            ->orderByDesc('estimated_date')
-            ->orderByDesc('id')
             ->get();
 
         return view('check.create', compact('control', 'attendances', 'activities'));
@@ -465,6 +461,7 @@ class CheckController extends Controller
             ->pluck('activity')
             ->filter()
             ->unique('id')
+            ->sortByDesc(fn ($a) => $a->estimated_date ?? '0000-00-00')
             ->values();
 
         return response()->json($activities);

@@ -4,7 +4,7 @@ import '../css/style.css';
 import '../css/personalStyles.css';
 
 // CSS de Tom Select cargado globalmente
-import "tom-select/dist/css/tom-select.css";
+import 'tom-select/dist/css/tom-select.css';
 
 // Módulos compartidos
 import { initModals } from './modules/shared/modals';
@@ -14,7 +14,7 @@ import { initTomSelects } from './modules/shared/tomselect';
 
 // Módulo actividades
 import { initPlannerActions } from './modules/planner/activityActions';
-import { setupExportListModal } from "./modules/planner/exportListModal";
+import { setupExportListModal } from './modules/planner/exportListModal';
 
 // Módulo empleados
 import { setupEmployeeCreate, setupEmployeeEdit, setupEmployeeDelete } from './modules/employees/employeeActions';
@@ -23,12 +23,12 @@ import './modules/employees/signature';
 import { setupAudienceCounter } from './modules/employees/audienceCounter';
 
 // Módulo controles
-import { setupCheckAttendance } from "./modules/check/checkActions";
-import { setupFinalizeActions } from "./modules/check/finalizeActions";
-import "./modules/check/activitySearch";
+import { setupCheckAttendance } from './modules/check/checkActions';
+import { setupFinalizeActions } from './modules/check/finalizeActions';
+import './modules/check/activitySearch';
 import { setupAttendancePrint } from './modules/check/attendancePrint';
 import { setupFacilitatorSignature } from './modules/check/facilitatorSignature';
-import "./modules/check/unlinkActivity";
+import './modules/check/unlinkActivity';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Módulos generales ---

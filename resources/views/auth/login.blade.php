@@ -25,7 +25,7 @@
     <div class="container-principal bg-filtro-azlo">
         <div class="bg-image">
             <div class="container-center">
-                <p class="text-white fs-4 mb-2">Bienvenido al Planificador y Evaluador de SST</p>
+                <p class="text-white fs-4 mb-2">Bienvenido al Planificador y Evaluador de SST y Gestión Humana</p>
                 <x-buttons.button variant="dark-azlo" icon="fa fa-sign-in" class="no-icon-margin" data-bs-target="#loginModal" />
             </div>
         </div>

@@ -14,9 +14,9 @@
                     <th scope="col">Tema</th>
                     <th scope="col">Objetivo</th>
                     <th scope="col">Lugar</th>
-                    <th scope="col">Hora inicio</th>
-                    <th scope="col">Hora fin</th>
-                    <th scope="col">Dirigido a</th>
+                    <th scope="col">Inicio</th>
+                    <th scope="col">Fin</th>
+                    <th scope="col">Dirigido</th>
                     <th scope="col">Facilitador</th>
                     <th scope="col">Duración</th>
                     <th scope="col">N°</th>
@@ -116,7 +116,10 @@
     </div>
 </div>
 
-{{-- Tarjeta de Cobertura (siempre visible) --}}
+{{-- Información/datos generales --}}
+<h2 class="my-5 pt-4 text-center">Datos generales</h2>
+
+{{-- Tarjeta de Cobertura --}}
 <div class="container px-3 pt-3">
     <div class="row justify-content-center">
         <div class="col-sm-10 col-md-8 col-lg-6 col-xl-4">
@@ -140,6 +143,24 @@
                                 {{ is_null($summaryTotals['pct'] ?? null) ? '—' : ((int) $summaryTotals['pct']) . '%' }}
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Tarjeta de leyenda --}}
+<div class="container px-3 pt-3">
+    <div class="row justify-content-center">
+        <div class="col-sm-10 col-md-8 col-lg-6 col-xl-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <div class="fw-semibold text-muted mb-2">
+                        Leyenda
+                    </div>
+                    <div class="d-flex justify-content-center gap-4">
+                        
                     </div>
                 </div>
             </div>
