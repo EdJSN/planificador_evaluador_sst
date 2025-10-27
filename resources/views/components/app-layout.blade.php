@@ -31,9 +31,11 @@
                 <li class="{{ request()->routeIs('check.*') ? 'active' : '' }}">
                     <a href="{{ route('check.index') }}"><span class="fa fa-list-ul"></span>Asistencia</a>
                 </li>
-                <li>
-                    {{--<a href="settings.html"><span class="fa fa-cogs"></span>Ajustes</a>--}}
+                @role('admin')
+                <li class="{{ request()->routeIs('settings.*') ? 'active' : '' }}">
+                    <a href="{{ route('settings.dashboard') }}"><span class="fa fa-cogs"></span>Ajustes</a>
                 </li>
+                @endrole
             </ul>
         </nav>
 

@@ -12,6 +12,17 @@ use Illuminate\Support\Facades\Storage;
 
 class EmployeeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:view_employee')->only(['index', 'show', 'dashboard']);
+        $this->middleware('permission:create_employee')->only(['store', 'create']);
+        $this->middleware('permission:edit_employee')->only(['edit', 'update']);
+        $this->middleware('permission:delete_employee')->only(['destroy']);
+
+        // Endpoints auxiliares de lectura:
+        $this->middleware('permission:view_employee')->only(['showSignature', 'countByAudiences']);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Vista principal (dashboard).

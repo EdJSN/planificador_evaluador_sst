@@ -100,7 +100,9 @@
     <div class="card-footer text-center">
         <div class="row">
             <div class="col-md-3">
+                @can('edit_activity')
                 <x-buttons.button id="selectBtn" icon="fa fa-mouse-pointer" text="Editar" />
+                @endcan
             </div>
             <div class="col-md-3">
                 <x-buttons.button id="openExportModalBtn" icon="fa fa-upload" text="Exportar" data-bs-toggle="modal"
@@ -110,7 +112,9 @@
                 <x-buttons.button id="btn-double" icon="fa fa-search" text="Ver mas" />
             </div>
             <div class="col-md-3">
+                @can('delete_activity')
                 <x-buttons.button id="deleteActivityButton" variant="danger" icon="fa fa-trash" text="Eliminar" />
+                @endcan
             </div>
         </div>
     </div>

@@ -20,8 +20,10 @@
                         <div class="d-inline-flex align-items-center border rounded-pill px-3 py-1 gap-2 bg-light">
                             <span >{{ $activity->topic ?? 'Actividad #' . $activity->id }} </span>
                             @if ($activity->states !== 'E')
+                            @can('unlink_activity_from_control')
                                 <x-buttons.small-button class="unlink-activity" variant="outline-danger"
                                 icon="fa fa-ban" data-url="{{ route('check.activities.unlink', $activity) }}"/>
+                            @endcan
                             @else
                                 <span class="ms-2 text-muted small">—</span>
                             @endif

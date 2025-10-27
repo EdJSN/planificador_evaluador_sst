@@ -15,6 +15,16 @@ class PlannerController extends Controller
     /**
      * Display a listing of the resource.
      */
+
+    public function __construct()
+    {
+        $this->middleware('permission:view_activity')->only(['dashboard', 'index', 'show']);
+        $this->middleware('permission:create_activity')->only(['store', 'create']);
+        $this->middleware('permission:edit_activity')->only(['edit', 'update']);
+        $this->middleware('permission:delete_activity')->only(['destroy']);
+        $this->middleware('permission:export_activity')->only(['export']);
+    }
+
     public function dashboard(Request $request)
     {
         // 1) Actividades base

@@ -13,6 +13,32 @@ use Illuminate\Support\Facades\Storage;
 
 class CheckController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:view_control')->only([
+            'index',
+            'show',
+            'searchActivities',
+            'facilitatorSignature'
+        ]);
+
+        $this->middleware('permission:manage_attendance')->only([
+            'prepare',
+            'updateAttendance',
+            'bulkUpdateAttendance',
+            'finalize',
+            'edit',
+            'update',
+            'store',
+            'create'
+        ]);
+
+        $this->middleware('permission:print_attendees')->only(['printAttendees']);
+
+        // “Eliminar” relación / acciones destructivas:
+        $this->middleware('permission:unlink_activity_from_control')->only(['unlinkFromControl', 'destroy']);
+    }
+
     /**
      * Listar controles activos o asistencias.
      */
@@ -461,7 +487,7 @@ class CheckController extends Controller
             ->pluck('activity')
             ->filter()
             ->unique('id')
-            ->sortByDesc(fn ($a) => $a->estimated_date ?? '0000-00-00')
+            ->sortByDesc(fn($a) => $a->estimated_date ?? '0000-00-00')
             ->values();
 
         return response()->json($activities);

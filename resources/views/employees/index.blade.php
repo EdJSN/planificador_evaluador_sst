@@ -5,7 +5,9 @@
 <div class="card">
     <div class="card-header text-end Azlo-light">
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+             @can('create_employee')
             <x-buttons.button id="createEmployeeBtn" variant="secondary-light" icon="fa fa-plus-circle" text="Nuevo" />
+             @endcan
             <x-buttons.button id="btn-double-employees" variant="secondary-light" icon="fa fa-search" text="Ver más" />
         </div>
     </div>
@@ -32,9 +34,12 @@
                         <td>{{ $employee->document }}</td>
                         <td class="text-center">{{ $employee->position->position }}</td>
                         <td class="text-center">
+                             @can('edit_employee')
                             <x-buttons.small-button class="editEmployeeBtn" icon="fa fa-pencil" />
-                            <x-buttons.small-button class="deleteEmployeeBtn" variant="outline-danger"
-                                icon="fa fa-trash" />
+                            @endcan
+                            @can('delete_employee')
+                            <x-buttons.small-button class="deleteEmployeeBtn" variant="outline-danger" icon="fa fa-trash" />
+                            @endcan
                         </td>
                     </tr>
                 @empty

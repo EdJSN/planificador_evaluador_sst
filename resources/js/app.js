@@ -30,6 +30,9 @@ import { setupAttendancePrint } from './modules/check/attendancePrint';
 import { setupFacilitatorSignature } from './modules/check/facilitatorSignature';
 import './modules/check/unlinkActivity';
 
+// Módulo ajustes
+import { setupSettingsUsers } from './modules/settings/settingsActions';
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- Módulos generales ---
     initModals();
@@ -70,6 +73,11 @@ document.addEventListener('DOMContentLoaded', () => {
         setupAttendancePrint();
         setupFacilitatorSignature();
         setupTableToggle('btn-double-check', 'card-body-table-check');
+    }
+
+    // --- Ajustes (solo si la ruta contiene /settings) ---
+    if (window.location.pathname.includes('/settings')) {
+        setupSettingsUsers();
     }
 });
 

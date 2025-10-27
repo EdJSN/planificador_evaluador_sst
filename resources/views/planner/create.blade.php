@@ -81,8 +81,9 @@
                 </div>
             @else
                 {{-- Si estamos en modo creación (el formulario original) --}}
-                <x-buttons.button type="submit" id="createPlannerBtn" icon="fa fa-floppy-o" text="Guardar"
-                    form="createActivityForm" />
+                @can('create_activity')
+                <x-buttons.button type="submit" id="createPlannerBtn" icon="fa fa-floppy-o" text="Guardar" form="createActivityForm" />
+                @endcan
             @endisset
         </div>
     </div>
