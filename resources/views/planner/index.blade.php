@@ -119,51 +119,86 @@
 {{-- Información/datos generales --}}
 <h2 class="my-5 pt-4 text-center">Datos generales</h2>
 
-{{-- Tarjeta de Cobertura --}}
-<div class="container px-3 pt-3">
-    <div class="row justify-content-center">
-        <div class="col-sm-10 col-md-8 col-lg-6 col-xl-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-body text-center">
-                    <div class="fw-semibold text-muted mb-2">
-                        Cobertura total {{ $yearToShow ?? date('Y') }}
-                    </div>
-                    <div class="d-flex justify-content-center gap-4">
-                        <div>
-                            <small class="text-muted d-block">Requerido</small>
-                            <div class="fs-5">{{ (int) ($summaryTotals['required'] ?? 0) }}</div>
+{{-- Card contenedora (mismo estilo que la “madre”) --}}
+<div class="card mt-3">
+    <div class="card-header text-center Azlo-light">
+        <h5 class="mb-0 text-white">Datos generales</h5>
+    </div>
+
+    {{-- Cuerpo: dos cards internas lado a lado, equidistantes --}}
+    <div class="card-body">
+        <div class="row justify-content-center g-4">
+
+            {{-- Card: Cobertura --}}
+            <div class="col-sm-10 col-md-6 col-xl-5">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body text-center">
+                        {{-- SELECTOR DE AÑO --}}
+                        <form method="GET" action="{{ route('planner.dashboard') }}" class="mb-2">
+                            <div class="d-flex justify-content-center align-items-center gap-2">
+                                <label for="year" class="mb-0">Año:</label>
+                                <select id="year" name="year" class="form-select form-select-sm w-auto"
+                                    onchange="this.form.submit()">
+                                    @foreach ($years as $yr)
+                                        <option value="{{ $yr }}"
+                                            {{ (int) $yearToShow === (int) $yr ? 'selected' : '' }}>
+                                            {{ $yr }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </form>
+                        <div class="text-muted mb-2">
+                            Cobertura total {{ $yearToShow ?? date('Y') }}
                         </div>
-                        <div>
-                            <small class="text-muted d-block">Ejecutado</small>
-                            <div class="fs-5">{{ (int) ($summaryTotals['executed'] ?? 0) }}</div>
-                        </div>
-                        <div>
-                            <small class="text-muted d-block">% Total</small>
-                            <div class="fs-5">
-                                {{ is_null($summaryTotals['pct'] ?? null) ? '—' : ((int) $summaryTotals['pct']) . '%' }}
+                        <div class="d-flex justify-content-center gap-4">
+                            <div>
+                                <small class="text-muted d-block">Requerido</small>
+                                <div class="fs-5">{{ (int) ($summaryTotals['required'] ?? 0) }}</div>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block">Ejecutado</small>
+                                <div class="fs-5">{{ (int) ($summaryTotals['executed'] ?? 0) }}</div>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block">% Total</small>
+                                <div class="fs-5">
+                                    {{ is_null($summaryTotals['pct'] ?? null) ? '—' : ((int) $summaryTotals['pct']) . '%' }}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 
-{{-- Tarjeta de leyenda --}}
-<div class="container px-3 pt-3">
-    <div class="row justify-content-center">
-        <div class="col-sm-10 col-md-8 col-lg-6 col-xl-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-body text-center">
-                    <div class="fw-semibold text-muted mb-2">
-                        Leyenda
-                    </div>
-                    <div class="d-flex justify-content-center gap-4">
-                        
+            {{-- Card: Leyenda --}}
+            <div class="col-sm-10 col-md-6 col-xl-5">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <div class="mb-2 text-center">Leyenda</div>
+                        <div class="text-muted text-center d-flex flex-column gap-2 ps-1">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-secondary me-2">&nbsp;&nbsp;</span>
+                                <span>P = Planificado</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-warning me-2">&nbsp;&nbsp;</span>
+                                <span>A = Aplazado</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-danger me-2">&nbsp;&nbsp;</span>
+                                <span>R = Reprogramado</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success me-2">&nbsp;&nbsp;</span>
+                                <span>E = Ejecutado</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
+    <div class="card-footer text-center"></div>
 </div>
