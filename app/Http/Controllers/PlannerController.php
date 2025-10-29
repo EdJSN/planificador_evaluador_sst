@@ -27,71 +27,53 @@ class PlannerController extends Controller
 
     public function dashboard(Request $request)
     {
-        // 1) Actividades base
-        $activities = Activity::with('audiences')
+        // Tamaño de página (default 25)
+        $perPage = $request->integer('per_page', 25);
+
+        // Años disponibles (distintos, descendente)
+        $years = Activity::whereNotNull('estimated_date')
+            ->selectRaw('DISTINCT YEAR(estimated_date) as yr')
+            ->orderByDesc('yr')
+            ->pluck('yr');
+
+        // Año por defecto (el más reciente o el año actual si no hay datos)
+        $fallbackYear = $years->first() ?? now()->year;
+        $yearToShow   = (int) $request->query('year', $fallbackYear);
+
+        // Consulta base de actividades + filtro por año 
+        $activities = Activity::with(['audiences'])
             ->withCount(['attendances as executed_count' => function ($q) {
                 $q->where('attend', true);
             }])
+            ->when($yearToShow, fn($q) => $q->whereYear('estimated_date', $yearToShow))
+            ->orderByDesc('estimated_date')
             ->orderByDesc('id')
-            ->get();
+            ->paginate($perPage)
+            ->withQueryString(); 
 
+        // Opciones de audiencias para la vista
         $audienceOptions = Audience::pluck('name', 'id')->toArray();
 
-        // IDs mostrados en la tabla
-        $activityIds = $activities->pluck('id');
+        // Totales del año seleccionado (required/executed/%)
+        $required = (int) Activity::whereYear('estimated_date', $yearToShow)
+            ->sum(DB::raw('COALESCE(number_participants,0)'));
 
-        // 2) Totales por año
-        $requiredPerYear = Activity::query()
-            ->whereIn('id', $activityIds)
-            ->whereNotNull('estimated_date')
-            ->whereRaw("TRIM(states) = 'E'")
-            ->whereNull('deleted_at')
-            ->selectRaw('YEAR(estimated_date) as yr, COALESCE(SUM(number_participants),0) as required')
-            ->groupBy('yr');
-
-        $executedPerYear = DB::table('attendances')
+        $executed = (int) DB::table('attendances')
             ->join('activities', 'attendances.activity_id', '=', 'activities.id')
-            ->whereIn('attendances.activity_id', $activityIds)
-            ->whereNotNull('activities.estimated_date')
+            ->whereYear('activities.estimated_date', $yearToShow)
             ->whereRaw("TRIM(activities.states) = 'E'")
             ->where('attendances.attend', 1)
-            ->selectRaw('YEAR(activities.estimated_date) as yr, COUNT(*) as executed')
-            ->groupBy('yr');
+            ->count();
 
-        $rows = DB::query()
-            ->fromSub($requiredPerYear, 'r')
-            ->leftJoinSub($executedPerYear, 'e', 'e.yr', '=', 'r.yr')
-            ->selectRaw('r.yr, r.required, COALESCE(e.executed,0) as executed')
-            ->orderByDesc('r.yr')
-            ->get();
+        $summaryTotals = [
+            'required' => $required,
+            'executed' => $executed,
+            'pct'      => $required > 0 ? (int) round(($executed / $required) * 100) : null,
+        ];
 
-        $totalsByYear = $rows->mapWithKeys(function ($r) {
-            $req = (int) $r->required;
-            $exe = (int) $r->executed;
-            $pct = $req > 0 ? (int) round(($exe / $req) * 100) : null;
-            return [(string) $r->yr => ['required' => $req, 'executed' => $exe, 'pct' => $pct]];
-        });
-
-        // 3) Selección de año
-        $years        = $totalsByYear->keys()->values();
-        $fallbackYear = optional($activities->max('estimated_date'))->format('Y') ?? now()->format('Y');
-        $yearToShow   = (int) $request->query('year', $years->first() ?? $fallbackYear);
-
-        // 4) Filtrado por año
-        // Solo mostrar en la tabla las actividades que correspondan al año seleccionado
-        $activities = $activities->filter(function ($activity) use ($yearToShow) {
-            if (!$activity->estimated_date) return false;
-            return (int) \Carbon\Carbon::parse($activity->estimated_date)->format('Y') === (int) $yearToShow;
-        });
-
-        // 5) Totales del año seleccionado
-        $summaryTotals = $totalsByYear[$yearToShow] ?? ['required' => 0, 'executed' => 0, 'pct' => null];
-
-        // 6) Retorno de vista
         return view('planner.dashboard', [
-            'activities'      => $activities,
+            'activities'      => $activities,     
             'audienceOptions' => $audienceOptions,
-            'totalsByYear'    => $totalsByYear,
             'years'           => $years,
             'yearToShow'      => $yearToShow,
             'summaryTotals'   => $summaryTotals,

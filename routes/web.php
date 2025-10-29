@@ -119,6 +119,18 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/users', [SettingsController::class, 'storeUser'])
             ->middleware('permission:create_user')
             ->name('settings.users.store');
+
+        Route::get('/settings/users', [SettingsController::class, 'usersIndex'])
+            ->middleware('permission:view_settings') 
+            ->name('settings.users.index');
+
+        Route::put('/settings/users/{user}', [SettingsController::class, 'updateUser'])
+            ->middleware('permission:edit_user')
+            ->name('settings.users.update');
+
+        Route::delete('/settings/users/{user}', [SettingsController::class, 'destroyUser'])
+            ->middleware('permission:delete_user')
+            ->name('settings.users.destroy');
     });
 
     // Ruta /home 

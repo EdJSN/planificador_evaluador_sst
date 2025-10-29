@@ -31,7 +31,7 @@ import { setupFacilitatorSignature } from './modules/check/facilitatorSignature'
 import './modules/check/unlinkActivity';
 
 // Módulo ajustes
-import { setupSettingsUsers } from './modules/settings/settingsActions';
+import { setupSettingsUsers, setupSettingsActions } from './modules/settings/settingsActions';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Módulos generales ---
@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Ajustes (solo si la ruta contiene /settings) ---
     if (window.location.pathname.includes('/settings')) {
         setupSettingsUsers();
+        setupSettingsActions();
     }
 });
 

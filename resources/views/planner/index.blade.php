@@ -96,12 +96,19 @@
                 @endforelse
             </tbody>
         </table>
+        @if ($activities->count())
+            <div class="pagination-wrapper mt-1">
+                <div>
+                    {{ $activities->onEachSide(1)->links() }}
+                </div>
+            </div>
+        @endif
     </div>
-    <div class="card-footer text-center">
-        <div class="row">
+    <div class="card-footer">
+        <div class="row text-center">
             <div class="col-md-3">
                 @can('edit_activity')
-                <x-buttons.button id="selectBtn" icon="fa fa-mouse-pointer" text="Editar" />
+                    <x-buttons.button id="selectBtn" icon="fa fa-mouse-pointer" text="Editar" />
                 @endcan
             </div>
             <div class="col-md-3">
@@ -109,11 +116,11 @@
                     data-bs-target="#exportListModal" />
             </div>
             <div class="col-md-3">
-                <x-buttons.button id="btn-double" icon="fa fa-search" text="Ver mas" />
+                <x-buttons.button id="btn-double" icon="fa fa-search" text="Ver más" />
             </div>
             <div class="col-md-3">
                 @can('delete_activity')
-                <x-buttons.button id="deleteActivityButton" variant="danger" icon="fa fa-trash" text="Eliminar" />
+                    <x-buttons.button id="deleteActivityButton" variant="danger" icon="fa fa-trash" text="Eliminar" />
                 @endcan
             </div>
         </div>
@@ -123,16 +130,13 @@
 {{-- Información/datos generales --}}
 <h2 class="my-5 pt-4 text-center">Datos generales</h2>
 
-{{-- Card contenedora (mismo estilo que la “madre”) --}}
 <div class="card mt-3">
     <div class="card-header text-center Azlo-light">
         <h5 class="mb-0 text-white">Datos generales</h5>
     </div>
-
     {{-- Cuerpo: dos cards internas lado a lado, equidistantes --}}
     <div class="card-body">
         <div class="row justify-content-center g-4">
-
             {{-- Card: Cobertura --}}
             <div class="col-sm-10 col-md-6 col-xl-5">
                 <div class="card shadow-sm border-0 h-100">
@@ -204,5 +208,6 @@
 
         </div>
     </div>
-    <div class="card-footer text-center"></div>
+    <div class="card-footer py-4">
+    </div>
 </div>

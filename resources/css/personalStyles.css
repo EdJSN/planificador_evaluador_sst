@@ -429,3 +429,19 @@ html {
   padding-top: .1rem; /* opcional: ajusta el padding arriba */
   padding-bottom: .1rem; /* opcional: ajusta el padding abajo */
 }
+
+/* Compacta y limpia la paginación */
+.pagination { margin-bottom: 0; }
+.page-item .page-link {
+  border: none;
+  box-shadow: none !important;
+  padding: .35rem .6rem;
+  line-height: 1.2;
+}
+.page-item .page-link:focus { box-shadow: none !important; }
+.page-item .page-link:hover { background: rgb(5, 190, 192, 0.800); }
+.page-item.active .page-link {
+  background: rgb(3, 84, 114); 
+  color: #fff; }
+.page-item.disabled .page-link { color: #adb5bd; }
+
