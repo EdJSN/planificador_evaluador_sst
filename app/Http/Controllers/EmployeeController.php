@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\{Activity, Audience, Attendance, Control, Employee, Position};
+use App\Models\{Activity, Audience, Attendance, Employee, Position};
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -28,9 +28,12 @@ class EmployeeController extends Controller
     | Vista principal (dashboard).
     |--------------------------------------------------------------------------
     */
-    public function index()
+    public function index(Request $request)
     {
-        $employees = Employee::with('position')->orderBy('names', 'asc')->get();
+        // Tamaño de página (default 25)
+        $perPage = $request->integer('per_page', 25);
+
+        $employees = Employee::with('position')->orderBy('names', 'asc')->paginate($perPage)->appends($request->query());
         $positions = Position::orderBy('position')->get();
 
         // Buscar actividades ya usadas en el control activo

@@ -31,12 +31,23 @@ class SettingsController extends Controller
     public function storeUser(Request $request)
     {
         try {
-            $validated = $request->validate([
-                'name'                  => 'required|string|max:255',
-                'email'                 => ['required', 'email', 'max:255', Rule::unique('users', 'email')->whereNull('deleted_at'),],
-                'password'              => 'required|string|min:8|confirmed',
-                'role'                  => 'nullable|string|exists:roles,name',
-            ]);
+            $validated = $request->validate(
+                [
+                    'name'                  => 'required|string|max:255',
+                    'email'                 => [
+                        'required',
+                        'email',
+                        'max:255',
+                        Rule::unique('users', 'email')->whereNull('deleted_at'),
+                        'regex:/^[A-Za-z0-9._%+-]+@azloplay\.com$/i'
+                    ],
+                    'password'              => 'required|string|min:8|confirmed',
+                    'role'                  => 'nullable|string|exists:roles,name',
+                ],
+                [
+                    'email.regex'   => 'Solo se permiten correos del dominio @azloplay.com.',
+                ]
+            );
 
             $user = User::create([
                 'name'     => $validated['name'],
@@ -77,17 +88,23 @@ class SettingsController extends Controller
     public function updateUser(Request $request, User $user)
     {
         try {
-            $validated = $request->validate([
-                'name'     => ['required', 'string', 'max:255'],
-                'email'    => [
-                    'required',
-                    'email',
-                    'max:255',
-                    Rule::unique('users', 'email')->ignore($user->id)->whereNull('deleted_at'),
+            $validated = $request->validate(
+                [
+                    'name'     => ['required', 'string', 'max:255'],
+                    'email'    => [
+                        'required',
+                        'email',
+                        'max:255',
+                        Rule::unique('users', 'email')->ignore($user->id)->whereNull('deleted_at'),
+                        'regex:/^[A-Za-z0-9._%+-]+@azloplay\.com$/i',
+                    ],
+                    'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+                    'role'     => ['nullable', 'string', Rule::exists('roles', 'name')],
                 ],
-                'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-                'role'     => ['nullable', 'string', Rule::exists('roles', 'name')],
-            ]);
+                [
+                    'email.regex'   => 'Solo se permiten correos del dominio @azloplay.com.',
+                ]
+            );
 
             // Evitar dejar el sistema sin administradores
             if (

@@ -40,7 +40,7 @@ class PlannerController extends Controller
         $fallbackYear = $years->first() ?? now()->year;
         $yearToShow   = (int) $request->query('year', $fallbackYear);
 
-        // Consulta base de actividades + filtro por año 
+        // Consulta a base de actividades + filtro por año 
         $activities = Activity::with(['audiences'])
             ->withCount(['attendances as executed_count' => function ($q) {
                 $q->where('attend', true);
@@ -95,7 +95,7 @@ class PlannerController extends Controller
             $years = collect([now()->year]);
         }
 
-        // 2) Año seleccionado (por query ?year=YYYY) con fallback
+        // 2) Año seleccionado (por query ?year=YYYY)
         $defaultYear = (int) ($years->first() ?? now()->year);
         $yearToShow  = (int) $request->input('year', $defaultYear);
 
@@ -205,7 +205,7 @@ class PlannerController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Activity $activity) // Asegúrate de que Activity $activity esté aquí
+    public function update(Request $request, Activity $activity) 
     {
         try {
             $validatedData = $request->validate([
@@ -290,11 +290,9 @@ class PlannerController extends Controller
         ]);
 
         if ($validated['tipo'] === 'individual') {
-            // No tocamos states ni escribimos control_id (debe ser NULL o quedar como esté si ya era NULL)
             $activity = Activity::findOrFail($validated['activity_id']);
 
-            // IMPORTANTE: no guardes nada si no cambias nada.
-            // Retornamos JSON con los IDs que el front usará para /check/prepare
+            // Retornar JSON con los IDs que el front usará para /check/prepare
             return response()->json([
                 'success'       => true,
                 'message'       => 'Actividad preparada en modo individual.',
@@ -303,8 +301,8 @@ class PlannerController extends Controller
             ]);
         }
 
-        // === GRUPO ===
-        // Creamos un control y asignamos su id a las actividades (la "ligadura" del grupo)
+        // Grupo
+        // Crear un control y asignar su id a las actividades
         $control = Control::create([
             'status'     => 'active',
             'created_by' => auth()->id(),

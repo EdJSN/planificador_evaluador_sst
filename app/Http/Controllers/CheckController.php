@@ -89,13 +89,16 @@ class CheckController extends Controller
             ]);
         }
 
-        // Escribe en sesión SOLO lo que realmente vas a mostrar
         $request->session()->put('check.active_ids', $validIds->all());
+
+        // Tamaño de página (default 25)
+        $perPage = $request->integer('per_page', 1);
 
         $attendances = Attendance::with(['employee.position', 'activity'])
             ->whereIn('activity_id', $validIds)
             ->orderBy('employee_id')
-            ->get();
+            ->paginate($perPage)
+            ->appends($request->query());
 
         $activities = Activity::whereIn('id', $validIds)
             ->withCount(['attendances as executed_count' => function ($q) {

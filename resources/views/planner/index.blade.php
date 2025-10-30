@@ -97,7 +97,7 @@
             </tbody>
         </table>
         @if ($activities->count())
-            <div class="pagination-wrapper mt-1">
+            <div class="pagination-wrapper m-2">
                 <div>
                     {{ $activities->onEachSide(1)->links() }}
                 </div>

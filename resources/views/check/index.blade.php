@@ -30,6 +30,13 @@
                     <tbody id="activitiesResultsBody">
                     </tbody>
                 </table>
+                @if ($attendances->count())
+                    <div class="pagination-wrapper m-2">
+                        <div>
+                            {{ $attendances->onEachSide(1)->links() }}
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
