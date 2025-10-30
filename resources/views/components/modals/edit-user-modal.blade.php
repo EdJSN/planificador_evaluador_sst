@@ -32,7 +32,7 @@
                     </div>
                     <div class="row">
                         <x-forms.select label="Rol" name="role" col="col-md-12" :options="$roles"
-                            class="form-select" :value="$user->roles->pluck('name')->first()" />
+                            class="form-select" :selected="$user->roles->pluck('name')->first()" />
                     </div>
                 </form>
             </div>

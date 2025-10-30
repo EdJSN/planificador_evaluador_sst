@@ -34,7 +34,7 @@
             <div class="modal-footer justify-content-center p-2">
                 <div class="row">
                     <div class="col-md-6 text-center">
-                        <x-buttons.button type="submit" variant="danger" icon="fa fa-trash" text="Eliminar" form="$formId" />
+                        <x-buttons.button type="submit" variant="danger" icon="fa fa-trash" text="Eliminar" :form="$formId" />
                     </div>
                     <div class="col-md-6 text-center">
                         <x-buttons.button type="button" variant="secondary" icon="fa fa-times" text="Cancelar" data-bs-dismiss="modal" />

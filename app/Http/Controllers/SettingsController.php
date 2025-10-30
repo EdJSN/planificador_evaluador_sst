@@ -33,7 +33,7 @@ class SettingsController extends Controller
         try {
             $validated = $request->validate([
                 'name'                  => 'required|string|max:255',
-                'email'                 => 'required|email|max:255|unique:users,email',
+                'email'                 => ['required', 'email', 'max:255', Rule::unique('users', 'email')->whereNull('deleted_at'),],
                 'password'              => 'required|string|min:8|confirmed',
                 'role'                  => 'nullable|string|exists:roles,name',
             ]);
@@ -79,30 +79,42 @@ class SettingsController extends Controller
         try {
             $validated = $request->validate([
                 'name'     => ['required', 'string', 'max:255'],
-                'email'    => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+                'email'    => [
+                    'required',
+                    'email',
+                    'max:255',
+                    Rule::unique('users', 'email')->ignore($user->id)->whereNull('deleted_at'),
+                ],
                 'password' => ['nullable', 'string', 'min:8', 'confirmed'],
                 'role'     => ['nullable', 'string', Rule::exists('roles', 'name')],
             ]);
 
-            // Evitar eliminar último Admin
+            // Evitar dejar el sistema sin administradores
             if (
                 $user->hasRole('admin')
                 && (($validated['role'] ?? null) !== 'admin')
                 && User::role('admin')->count() === 1
             ) {
-                return back()->withErrors(['role' => 'No puedes quitar el último administrador del sistema.'])->withInput();
+                return response()->json([
+                    'message' => 'No puedes quitar el último administrador del sistema.'
+                ], 403);
             }
+
+            // Normaliza email si quieres tratarlo case-insensitive
+            $validated['email'] = mb_strtolower($validated['email']);
 
             DB::transaction(function () use ($user, $validated) {
                 $user->name  = $validated['name'];
                 $user->email = $validated['email'];
 
+                // Solo actualizar password si viene algo
                 if (!empty($validated['password'])) {
-                    $user->password = $validated['password'];
+                    $user->password = $validated['password']; // asume mutator/hasheado en el modelo
                 }
+
                 $user->save();
 
-                // si envían rol, lo sincroniza; si no, no cambia
+                // Sincroniza roles SOLO si la clave 'role' vino en la request
                 if (array_key_exists('role', $validated)) {
                     $user->syncRoles($validated['role'] ? [$validated['role']] : []);
                 }
@@ -117,7 +129,8 @@ class SettingsController extends Controller
                 'message' => 'Error de validación.',
                 'errors'  => $e->errors(),
             ], 422);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            // Opcional: log($e->getMessage());
             return response()->json([
                 'message' => 'Ocurrió un error al actualizar el usuario.',
             ], 500);
@@ -125,34 +138,33 @@ class SettingsController extends Controller
     }
 
     // Eliminar usuario
-    public function destroyUser(User $user)
+    public function destroyUser(Request $request, User $user)
     {
         try {
-            // Evitar autodestruirse
+            // No dejar que un usuario se borre a sí mismo
             if (auth()->id() === $user->id) {
-                return back()->with('status', 'No puedes eliminar tu propio usuario.');
+                return response()->json(['message' => 'No puedes eliminar tu propio usuario.'], 403);
             }
 
-            // Validar contraseña
-            $password = request('password');
+            // Confirmación por contraseña del admin actual
+            $password = $request->input('password');
             if (!$password || !Hash::check($password, auth()->user()->password)) {
-                return back()->withErrors(['password' => 'La contraseña es incorrecta.'])->withInput();
+                return response()->json(['message' => 'La contraseña es incorrecta.'], 422);
             }
 
-            // Bloquear eliminación del último admin
+            // No dejar sin administradores
             if ($user->hasRole('admin') && User::role('admin')->count() === 1) {
-                return back()->withErrors(['user' => 'No puedes eliminar al último administrador del sistema.']);
+                return response()->json(['message' => 'No puedes eliminar al último administrador del sistema.'], 403);
             }
 
-            $user->delete();
+            // Soft delete atómico (si algo falla, revierte)
+            DB::transaction(function () use ($user) {
+                $user->delete();
+            });
 
-            return response()->json([
-                'message' => 'Usuario eliminado correctamente.',
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Ocurrió un error al eliminar el usuario.',
-            ], 500);
+            return response()->json(['message' => 'Usuario eliminado correctamente.'], 200);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Ocurrió un error al eliminar el usuario.'], 500);
         }
     }
 }
