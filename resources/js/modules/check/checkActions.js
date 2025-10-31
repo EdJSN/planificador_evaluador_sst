@@ -3,13 +3,13 @@ import axios from "axios";
 export function setupCheckAttendance() {
   const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-  // === Auxiliar: obtener los activity_ids del grupo ===
+  // Auxiliar: obtener los activity_ids del grupo 
   function getActiveActivityIds() {
-    // 1) Preferimos la variable global que pusiste en Blade
+    // 1) Se toma la variable global
     if (Array.isArray(window.activeActivities) && window.activeActivities.length > 0) {
       return window.activeActivities.map(n => Number(n)).filter(Boolean);
     }
-    // 2) Fallback: si tienes un hidden con CSV (p.ej. finalizeActivityIds), lo tomamos de ahí
+    // 2) Fallback: si hay un hidden con CSV), se toma de ahí
     const hidden = document.getElementById("finalizeActivityIds");
     if (hidden && hidden.value) {
       return hidden.value
@@ -17,16 +17,15 @@ export function setupCheckAttendance() {
         .map(s => parseInt(s.trim(), 10))
         .filter(n => !Number.isNaN(n));
     }
-    // 3) Si no hay nada, devolvemos arreglo vacío (el backend lo rechazará)
+    // 3) Si no hay nada, se devuelve un arreglo vacío
     return [];
   }
 
-  // === Guardado inmediato al cambiar un radio ===
+  // Guardado inmediato al cambiar un radio 
   document.querySelectorAll(".attend-radio").forEach((radio) => {
     radio.addEventListener("change", async (e) => {
       const attendanceId = e.target.dataset.attendanceId;
       const value = e.target.value === "1";
-      // Opcional (recomendado): replicar al grupo también en el cambio inmediato
       const activityIds = getActiveActivityIds();
 
       try {
@@ -35,8 +34,7 @@ export function setupCheckAttendance() {
           {
             attendance_id: Number(attendanceId),
             attend: value,
-            // Envíalo si quieres que el backend replique el cambio en todas las actividades del grupo:
-            activity_ids: activityIds, // <-- clave para replicar por grupo (si tu update lo soporta)
+            activity_ids: activityIds, 
           },
           {
             headers: {
@@ -46,7 +44,6 @@ export function setupCheckAttendance() {
           }
         );
 
-        console.log(`Asistencia ${attendanceId} guardada: ${value}`);
       } catch (error) {
         console.error("Error al guardar asistencia", error);
         alert("Error: No se pudo guardar la asistencia. Intenta de nuevo.");
@@ -54,7 +51,7 @@ export function setupCheckAttendance() {
     });
   });
 
-  // === Botón Guardar → mandar todo en lote ===
+  // Botón Guardar, mandar todo en lote
   const saveBtn = document.getElementById("saveSignatureBtn");
   if (saveBtn) {
     saveBtn.addEventListener("click", async () => {
@@ -75,7 +72,7 @@ export function setupCheckAttendance() {
         return;
       }
 
-      // 2) IDs de actividades del grupo (OBLIGATORIO para actualizar todas)
+      // 2) IDs de actividades del grupo (obligatorio para actualizar todas)
       const activityIds = getActiveActivityIds();
       if (!Array.isArray(activityIds) || activityIds.length === 0) {
         alert(
@@ -84,7 +81,7 @@ export function setupCheckAttendance() {
         return;
       }
 
-      // 3) Payload: aquí incluimos attendances + activity_ids
+      // 3) Payload: aquí se incluye attendances + activity_ids
       const payload = {
         attendances: attendances,
         activity_ids: activityIds,

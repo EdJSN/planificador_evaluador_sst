@@ -74,7 +74,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $manager->syncPermissions($managerPerms);
 
         // Usuario admin por email (opcional)
-        if ($user = User::where('email', 'edhuardguerrero@gmail.com')->first()) {
+        if ($user = User::where('email', 'sst@azloplay.com')->first()) {
             $user->assignRole('admin');
         }
 
